@@ -19,7 +19,7 @@ const char* WIFI_SSID = "MIN_WIFI";
 const char* WIFI_PASSWORD = "minmin12345678";
 
 // Target API Server URL
-const char* SERVER_URL = "http://192.168.1.102:3000/api/temp";
+const char* SERVER_URL = "https://lab-iot-temperture-7day.onrender.com/api/temp";
 
 /**
  * Initialize sensors and configure hardware pin modes
