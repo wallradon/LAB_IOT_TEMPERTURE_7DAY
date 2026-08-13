@@ -6,6 +6,7 @@
 // Hardware Pin Definitions
 #define ONE_WIRE_BUS 3
 #define SENSOR_PIN 6
+#define STATUS_LED_PIN 8
 
 // DS18B20 Sensor Configurations
 OneWire oneWire(ONE_WIRE_BUS);
@@ -27,6 +28,7 @@ const char* SERVER_URL = "https://lab-iot-temperture-7day.onrender.com/api/temp"
 void initDevices() {
   pinMode(ONE_WIRE_BUS, INPUT);
   pinMode(SENSOR_PIN, OUTPUT);
+  pinMode(STATUS_LED_PIN, OUTPUT);
   
   // Power up the DS18B20 sensor
   digitalWrite(SENSOR_PIN, HIGH);
@@ -93,6 +95,11 @@ void sendData(float temp) {
     Serial.println(httpResponseCode);
     String responseMessage = http.getString();
     Serial.println("💬 Server message: " + responseMessage);
+    
+    // Blink LED 1 time upon successful POST
+    digitalWrite(STATUS_LED_PIN, HIGH);
+    delay(200);
+    digitalWrite(STATUS_LED_PIN, LOW);
   } else {
     Serial.print("❌ Failed to send data. HTTP Error code: ");
     Serial.println(httpResponseCode);
@@ -110,6 +117,9 @@ void goToSleep() {
   
   // Power down the sensor
   digitalWrite(SENSOR_PIN, LOW);
+  
+  // Ensure the status LED is completely turned OFF to save power during Deep Sleep
+  digitalWrite(STATUS_LED_PIN, LOW);
 
   Serial.println("💤 Entering Deep Sleep mode...");
   Serial.flush(); 
