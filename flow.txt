@@ -1,0 +1,2 @@
+ตอนนี้ใช้ node express ทำ api และใช้ supabase เป็นฐานข้อมูลและเชื่อมให้ grafana ดึงข้อมูลจาก database
+แบบ direct connection string Transaction poolr เพื่อไปแสดงค่า เป็น dashboard

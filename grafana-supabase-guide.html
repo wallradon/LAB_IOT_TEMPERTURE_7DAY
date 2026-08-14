@@ -6,175 +6,352 @@
 <title>คู่มือฉบับ ELI5: เชื่อม Grafana กับ Supabase (Project ESP32)</title>
 <style>
   :root {
-    --bg: #ffffff;
-    --bg-soft: #f5f5f5;
-    --card: #ffffff;
-    --card-soft: #fafafa;
-    --ink: #111111;
-    --ink-soft: #555555;
-    --primary: #111111;
-    --primary-dark: #000000;
-    --accent: #444444;
-    --blue: #111111;
-    --red: #8b0000;
-    --border: #d4d4d4;
-    --code-bg: #f4f4f5;
-    --code-ink: #18181b;
-    --radius: 14px;
+    --bg: #FEFAF6;
+    --bg-soft: #EADBC8;
+    --card: #FFFFFF;
+    --card-soft: #FEFAF6;
+    --ink: #102C57;
+    --ink-soft: rgba(16, 44, 87, 0.85);
+    --primary: #102C57;
+    --primary-dark: #102C57;
+    --accent: #DAC0A3;
+    --border: #DAC0A3;
+    --code-bg: #102C57;
+    --code-ink: #FEFAF6;
+    --radius: 20px;
+    --ios-radius-lg: 24px;
+    --ios-radius-sm: 12px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: "Segoe UI", "Sarabun", "Leelawadee UI", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro Rounded", "Segoe UI", "Sarabun", system-ui, sans-serif;
     background: var(--bg);
     color: var(--ink);
     line-height: 1.7;
+    font-weight: 550;
+    -webkit-font-smoothing: antialiased;
+    padding-top: 54px;
   }
-  a { color: var(--blue); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+
+  a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--border); font-weight: 600; transition: all 0.2s ease; }
+  a:hover { color: #102C57; text-decoration-color: var(--ink); }
+
+  /* ---------- iOS Frosted Top Navigation Bar ---------- */
+  .ios-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    background: rgba(254, 250, 246, 0.85);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-bottom: 1px solid rgba(218, 192, 163, 0.8);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 20px;
+  }
+  .ios-nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .ios-nav-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ios-progress-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+  }
+  .ios-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #102C57, #DAC0A3);
+    width: 0%;
+    transition: width 0.1s ease-out;
+  }
 
   /* ---------- Hero ---------- */
   .hero {
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 60%, #2b2b2b 100%);
-    padding: 60px 24px 48px;
+    background: linear-gradient(180deg, #EADBC8 0%, #FEFAF6 100%);
+    padding: 64px 24px 48px;
     text-align: center;
-    border-bottom: 3px solid #000;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(218, 192, 163, 0.4) 0%, rgba(254, 250, 246, 0) 70%);
+    pointer-events: none;
   }
   .hero .badge {
     display: inline-block;
-    background: #ffffff;
-    color: #000000;
-    border: 1px solid #000000;
-    padding: 4px 14px;
+    background: var(--primary);
+    color: var(--code-ink);
+    border: 1px solid var(--primary);
+    padding: 4px 16px;
     border-radius: 999px;
-    font-size: 13px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
     margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(16, 44, 87, 0.2);
   }
-  .hero h1 { font-size: clamp(28px, 5vw, 46px); font-weight: 800; color: #ffffff; }
-  .hero p { color: #bfbfbf; margin-top: 12px; font-size: 18px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 800; color: var(--ink); letter-spacing: -0.5px; }
+  .hero p { color: var(--ink); opacity: 0.9; margin-top: 12px; font-size: 17px; font-weight: 600; max-width: 650px; margin-left: auto; margin-right: auto; }
   .hero .stack {
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px;
   }
   .hero .stack span {
-    background: #2b2b2b;
-    border: 1px solid #555555;
-    padding: 6px 14px; border-radius: 8px; font-size: 14px; color: #e5e5e5;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--ink);
+    box-shadow: 0 2px 6px rgba(16, 44, 87, 0.08);
   }
 
   /* ---------- Layout ---------- */
   .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
   .container { display: flex; gap: 28px; max-width: 1280px; margin: 40px auto; padding: 0 20px; align-items: flex-start; }
 
+  /* iOS Grouped Sidebar Table of Contents */
   .toc {
-    width: 260px; flex-shrink: 0; position: sticky; top: 20px;
-    background: var(--bg-soft); border: 1px solid #000000; border-radius: var(--radius);
-    padding: 18px;
+    width: 280px; flex-shrink: 0; position: sticky; top: 74px;
+    background: rgba(234, 219, 200, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: var(--ios-radius-lg);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(16, 44, 87, 0.08);
   }
-  .toc h3 { font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc h3 { font-size: 13px; color: var(--ink); opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; font-weight: 800; }
   .toc ol { list-style: none; counter-reset: toc; }
-  .toc li { counter-increment: toc; margin-bottom: 6px; }
+  .toc li { counter-increment: toc; margin-bottom: 4px; }
   .toc li a {
-    display: block; color: #333333; font-size: 14px; padding: 5px 8px; border-radius: 6px;
+    display: flex; align-items: center; color: var(--ink); font-size: 13.5px; font-weight: 600; padding: 8px 12px; border-radius: var(--ios-radius-sm); text-decoration: none; transition: all 0.2s ease;
   }
-  .toc li a::before { content: counter(toc, decimal-leading-zero) "  "; color: #000000; font-weight: 700; }
-  .toc li a:hover { background: #000000; color: #ffffff; text-decoration: none; }
+  .toc li a::before { content: counter(toc, decimal-leading-zero); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: rgba(16, 44, 87, 0.12); border-radius: 6px; font-size: 11px; margin-right: 10px; color: var(--ink); font-weight: 800; flex-shrink: 0; }
+  .toc li a:hover, .toc li a.active { background: var(--primary); color: var(--code-ink); transform: translateX(2px); font-weight: 700; }
+  .toc li a:hover::before, .toc li a.active::before { background: rgba(254, 250, 246, 0.25); color: var(--code-ink); }
 
   .content { flex: 1; min-width: 0; }
 
-  /* ---------- Cards / Sections ---------- */
+  /* ---------- iOS Inset Grouped Cards / Sections ---------- */
   .card {
-    background: var(--card); color: var(--ink);
-    border-radius: var(--radius);
-    border: 1px solid #000000;
-    padding: 28px;
-    margin-bottom: 28px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    background: #FFFFFF;
+    color: var(--ink);
+    border-radius: var(--ios-radius-lg);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(16, 44, 87, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
   .card h2 {
-    font-size: 24px; font-weight: 800; margin-bottom: 6px;
-    display: flex; align-items: center; gap: 12px;
+    font-size: 22px; font-weight: 800; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px; color: var(--ink);
+    letter-spacing: -0.3px;
   }
   .card h2 .num {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 10px; background: #000000;
-    color: #ffffff; font-size: 18px; font-weight: 800; flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 12px; background: var(--primary);
+    color: var(--code-ink); border: 1px solid var(--primary); font-size: 16px; font-weight: 800; flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(16, 44, 87, 0.2);
   }
-  .card .lead { color: var(--ink-soft); margin-bottom: 18px; }
-  .card h3 { font-size: 18px; margin: 22px 0 10px; color: var(--primary-dark); }
-  .card p, .card li { margin-bottom: 8px; }
+  .card .lead { color: var(--ink); font-weight: 600; margin-bottom: 20px; font-size: 15.5px; }
+  .card h3 { font-size: 17.5px; margin: 24px 0 12px; color: var(--ink); font-weight: 800; border-left: 4px solid var(--primary); padding-left: 12px; }
+  .card p, .card li { margin-bottom: 10px; font-weight: 550; }
   .card ul, .card ol { padding-left: 22px; }
 
   .elvis {
-    background: #f2f2f2; border-left: 5px solid #000000;
-    padding: 14px 18px; border-radius: 8px; margin: 16px 0;
-    font-size: 15px;
+    background: var(--bg-soft); border: 1px solid var(--border); border-left: 5px solid var(--primary);
+    padding: 16px 20px; border-radius: var(--ios-radius-sm); margin: 18px 0;
+    font-size: 14.5px; font-weight: 600; color: var(--ink);
   }
-  .elvis strong { color: #000000; }
+  .elvis strong { color: var(--ink); font-weight: 800; }
 
-  /* ---------- Code ---------- */
-  pre {
-    background: var(--code-bg); color: var(--code-ink);
-    border: 1px solid #000000;
-    padding: 16px 18px; border-radius: 10px; overflow-x: auto;
-    font-family: "Cascadia Code", Consolas, "JetBrains Mono", monospace;
-    font-size: 13.5px; line-height: 1.6; margin: 14px 0;
+  /* ---------- iOS Interactive Code & Copy Button ---------- */
+  .code-block-wrapper {
+    position: relative;
+    margin: 16px 0;
+  }
+  pre, .conn-str {
+    background: #102C57; color: #FEFAF6; font-family: "Cascadia Code", Consolas, "JetBrains Mono", monospace;
+    border: 1px solid #102C57; padding: 18px; border-radius: var(--ios-radius-sm);
+    font-size: 13.5px; font-weight: 600; line-height: 1.6; overflow-x: auto; word-break: break-all;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
   }
   code {
     font-family: "Cascadia Code", Consolas, "JetBrains Mono", monospace;
-    background: #e5e5e5; color: #000000;
-    padding: 1px 6px; border-radius: 5px; font-size: 13px;
+    background: var(--bg-soft); color: var(--ink);
+    border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: 6px; font-size: 13px; font-weight: 700;
   }
-  pre code { background: none; color: inherit; padding: 0; }
-  .com { color: #737373; font-style: italic; }
-  .str { color: #444444; }
-  .k { color: #000000; font-weight: 700; }
-  .fn { color: #1f1f1f; font-weight: 700; }
+  pre code { background: none; color: inherit; padding: 0; border: none; font-weight: 600; }
+  .com { color: #DAC0A3; font-weight: 500; font-style: italic; }
+  .str { color: #EADBC8; font-weight: 600; }
+  .k { color: #FEFAF6; font-weight: 800; }
+  .fn { color: #FEFAF6; font-weight: 800; text-decoration: underline; }
 
-  /* ---------- Tables ---------- */
-  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
-  th { background: #000000; color: #ffffff; text-align: left; padding: 10px 12px; }
-  td { border-bottom: 1px solid var(--border); padding: 10px 12px; vertical-align: top; }
-  tr:nth-child(even) td { background: var(--card-soft); }
+  /* iOS Copy Button */
+  .ios-copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(254, 250, 246, 0.9);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 10;
+  }
+  .ios-copy-btn:hover {
+    background: var(--ink);
+    color: var(--code-ink);
+    transform: scale(1.05);
+  }
+  .ios-copy-btn:active {
+    transform: scale(0.95);
+  }
 
-  /* ---------- Steps ---------- */
+  /* ---------- iOS Inset Tables ---------- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 14px; border-radius: var(--ios-radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  th { background: var(--primary); color: var(--code-ink); text-align: left; padding: 12px 14px; font-weight: 800; border-bottom: 1px solid var(--primary); }
+  td { border-bottom: 1px solid rgba(218, 192, 163, 0.6); padding: 12px 14px; vertical-align: top; color: var(--ink); font-weight: 550; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg); }
+
+  /* ---------- iOS Steps ---------- */
   .step {
-    border: 1px solid var(--border); border-radius: 12px; padding: 18px;
-    margin: 16px 0; background: var(--card-soft);
+    border: 1px solid var(--border); border-radius: var(--ios-radius-sm); padding: 18px 20px;
+    margin: 16px 0; background: var(--bg);
+    transition: transform 0.2s ease, border-color 0.2s ease;
   }
-  .step .step-title { font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .step:hover { border-color: var(--ink); }
+  .step .step-title { font-weight: 800; color: var(--ink); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; font-size: 15px; }
   .step .step-title .dot {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 26px; height: 26px; border-radius: 50%; background: #000000;
-    color: #ffffff; font-size: 14px; font-weight: 800; flex-shrink: 0;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
+    color: var(--code-ink); border: 1px solid var(--primary); font-size: 13px; font-weight: 800; flex-shrink: 0;
   }
 
-  .note { background: #f2f2f2; border-left: 5px solid #444444; padding: 12px 16px; border-radius: 8px; margin: 14px 0; font-size: 14.5px; }
-  .warn { background: #f2f2f2; border-left: 5px solid #8b0000; padding: 12px 16px; border-radius: 8px; margin: 14px 0; font-size: 14.5px; }
+  .note { background: var(--bg-soft); border: 1px solid var(--border); border-left: 5px solid var(--primary); padding: 14px 18px; border-radius: var(--ios-radius-sm); margin: 16px 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .warn { background: var(--bg-soft); border: 1px solid var(--border); border-left: 5px solid var(--primary); padding: 14px 18px; border-radius: var(--ios-radius-sm); margin: 16px 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
 
-  .conn-str { background: #000000; color: #ffffff; font-family: monospace; padding: 14px 16px; border-radius: 10px; margin: 12px 0; font-size: 13.5px; overflow-x: auto; word-break: break-all; }
-
-  .flow-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin: 18px 0; }
+  .flow-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; margin: 20px 0; }
   .flow-box {
-    background: var(--bg-soft); border: 1px solid #000000; border-radius: 12px;
-    padding: 14px 16px; text-align: center; min-width: 120px;
+    background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--ios-radius-sm);
+    padding: 16px 20px; text-align: center; min-width: 130px; color: var(--ink);
+    box-shadow: 0 4px 12px rgba(16, 44, 87, 0.08);
   }
-  .flow-box .icon { font-size: 26px; }
-  .flow-box .name { font-weight: 700; margin-top: 4px; }
-  .flow-box .sub { font-size: 12px; color: #666666; }
-  .flow-arrow { color: #000000; font-size: 22px; font-weight: 800; }
+  .flow-box .icon { font-size: 28px; }
+  .flow-box .name { font-weight: 700; margin-top: 6px; font-size: 14px; }
+  .flow-box .sub { font-size: 12px; color: var(--ink); opacity: 0.75; }
+  .flow-arrow { color: var(--ink); font-size: 22px; font-weight: 800; }
 
-  footer { text-align: center; color: #555555; padding: 40px 20px; font-size: 13px; }
+  /* iOS Toast Notification */
+  .ios-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(16, 44, 87, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: var(--code-ink);
+    border: 1px solid var(--border);
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 10px 30px rgba(16, 44, 87, 0.3);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2000;
+    pointer-events: none;
+  }
+  .ios-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* iOS Floating Back-To-Top Button */
+  .ios-back-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(16, 44, 87, 0.9);
+    border: 1px solid var(--border);
+    color: var(--code-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(16, 44, 87, 0.25);
+    backdrop-filter: blur(15px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 900;
+  }
+  .ios-back-top.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  .ios-back-top:hover {
+    transform: scale(1.1);
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  footer { text-align: center; color: var(--ink); opacity: 0.7; padding: 40px 20px; font-size: 13px; }
 
   @media (max-width: 900px) {
     .container { flex-direction: column; }
-    .toc { position: static; width: 100%; }
+    .toc { position: static; width: 100%; margin-bottom: 20px; }
   }
 </style>
-</head>
 <body>
 
-<!-- ============ HERO ============ -->
+<!-- ============ iOS Frosted Header & Progress Bar ============ -->
+<div class="ios-navbar">
+  <div class="ios-nav-content">
+    <div class="ios-nav-title">⚡ ESP32 &rarr; Supabase &rarr; Grafana Guide</div>
+  </div>
+  <div class="ios-progress-container">
+    <div class="ios-progress-bar" id="progressBar"></div>
+  </div>
+</div>
 <header class="hero">
   <div class="badge">TUTORIAL &middot; ELI5 (Explain Like I'm 5)</div>
   <h1>เชื่อม Grafana กับ Supabase<br>เพื่อทำ Dashboard แบบง่าย ๆ</h1>
@@ -194,7 +371,7 @@
     <ol>
       <li><a href="#s1">ภาพรวมทั้งระบบ</a></li>
       <li><a href="#s2">ดูโค้ดโปรเจคนี้ก่อน</a></li>
-      <li><a href="#s3">วิธีการหาค่า API Keys และ Env Variables</a></li>
+      <li><a href="#s3">ทำความเข้าใจ API Keys &amp; วิธีหาค่า Env Variables</a></li>
       <li><a href="#s4">การเชื่อมต่อ Supabase กับ Node.js</a></li>
       <li><a href="#s5">รู้จัก Connection String (ก่อนเชื่อม Grafana)</a></li>
       <li><a href="#s6">เปิด Grafana & Add Data Source</a></li>
@@ -298,39 +475,199 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
     </section>
 
     <section class="card" id="s3">
-      <h2><span class="num">3</span>วิธีการหาค่า API Keys และ Environment Variables</h2>
-      <p class="lead">ก่อนจะนำ Node.js เชื่อมต่อกับ Supabase เราต้องไปคัดลอกค่ากุญแจสำคัญ 4 ค่านี้มาจาก Supabase Dashboard (เวอร์ชันปัจจุบันล่าสุด):</p>
+      <h2><span class="num">3</span>ทำความเข้าใจ API Keys &amp; วิธีหาค่า Environment Variables</h2>
+      <p class="lead">ก่อนนำ Node.js หรือแอปพลิเคชันใด ๆ ไปเชื่อมต่อกับ Supabase การเข้าใจเรื่อง <strong>API Keys (ด่านปราการความปลอดภัยชั้นแรก)</strong> ถือเป็นเรื่องสำคัญที่สุด</p>
 
-      <div class="conn-str">
-SUPABASE_URL=https://&lt;your-project-id&gt;.supabase.co
-SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_JWKS_URL=https://&lt;your-project-id&gt;.supabase.co/auth/v1/.well-known/jwks.json
+      <!-- 3.1 Understanding API Keys -->
+      <h3>3.1 ทำความเข้าใจหน้าที่ของ API Keys (API Keys vs Supabase Auth)</h3>
+      <p>API Key ทำหน้าที่ยืนยันตัวตนของ <strong>"แอปพลิเคชัน/คอมโพเนนต์"</strong> ที่เข้ามาใช้งาน Supabase (ไม่ได้แยกแยะว่าผู้ใช้คือใคร แต่บอกว่าระบบส่วนไหนกำลังอ่าน/เขียนข้อมูลอยู่)</p>
+      
+      <div class="elvis">
+        <strong>หลักการเปรียบเทียบง่าย ๆ (ELI5):</strong><br>
+        &bull; <strong>API Keys (ตอบคำว่า WHAT):</strong> "อะไร" กำลังเข้าถึงโปรเจค? (เช่น หน้าเว็บ, แอปมือถือ, เซิร์ฟเวอร์ Node.js หรือ Edge Function)<br>
+        &bull; <strong>Supabase Auth (ตอบคำว่า WHO):</strong> "ใคร" กำลังเข้าถึงโปรเจค? (เช่น คุณสมชาย, คุณสมหญิง, หรือ Admin)
       </div>
 
-      <h3>3.1 ขั้นตอนการหาค่าคีย์บน Supabase Dashboard</h3>
-      <div class="step">
-        <div class="step-title"><span class="dot">1</span>ไปที่ Project Settings</div>
-        <p>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a> เลือกโปรเจคของคุณ จากนั้นคลิกที่ไอคอนรูปฟันเฟือง <strong>Project Settings</strong> บริเวณเมนูซ้ายล่างสุด</p>
+      <table>
+        <thead>
+          <tr>
+            <th>ขอบเขตความรับผิดชอบ</th>
+            <th>คำถามสำคัญ</th>
+            <th>คำตอบ / ตัวอย่าง</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>API Keys</strong></td>
+            <td><strong>What</strong> is accessing the project?</td>
+            <td>Web page, Mobile app, Express Server, Edge Function...</td>
+          </tr>
+          <tr>
+            <td><strong>Supabase Auth</strong></td>
+            <td><strong>Who</strong> is accessing the project?</td>
+            <td>User A, User B, Admin, Guest...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 3.2 Types of API Keys -->
+      <h3>3.2 ประเภทของ API Keys ทั้ง 4 ชนิด (4 Types of API Keys)</h3>
+      <p>Supabase มี API Keys ให้เลือกใช้ 4 ชนิด แบ่งตามระดับสิทธิ์ความปลอดภัยและรูปแบบคีย์ ดังนี้:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ประเภทคีย์ (Type)</th>
+            <th>รูปแบบ (Format)</th>
+            <th>ระดับสิทธิ์</th>
+            <th>การใช้งานที่เหมาะสม (Use Case)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Publishable key</strong></td>
+            <td><code>sb_publishable_...</code></td>
+            <td>ต่ำ (Low)</td>
+            <td><strong>ปลอดภัยสำหรับเผยแพร่ออนไลน์:</strong> หน้าเว็บ Frontend, แอปมือถือ/คอมพิวเตอร์, GitHub Actions, CLI, ซอร์สโค้ดฝั่ง Client</td>
+          </tr>
+          <tr>
+            <td><strong>Secret keys</strong></td>
+            <td><code>sb_secret_...</code></td>
+            <td>สูงมาก (Elevated)</td>
+            <td><strong>ใช้เฉพาะฝั่ง Backend เท่านั้น:</strong> Express Server, Admin API, Edge Functions, Microservices คีย์นี้ข้ามผ่าน Row Level Security (RLS) ทั้งหมด!</td>
+          </tr>
+          <tr>
+            <td><code>anon</code> <em>(Legacy)</em></td>
+            <td>JWT (Long lived)</td>
+            <td>ต่ำ (Low)</td>
+            <td>เวอร์ชันดั้งเดิมของ Publishable key (ยังใช้งานได้อยู่)</td>
+          </tr>
+          <tr>
+            <td><code>service_role</code> <em>(Legacy)</em></td>
+            <td>JWT (Long lived)</td>
+            <td>สูงมาก (Elevated)</td>
+            <td>เวอร์ชันดั้งเดิมของ Secret key (ยังใช้งานได้อยู่)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>📢 ประกาศการยกเลิกใช้งานคีย์แบบเก่า (Deprecation Notice):</strong><br>
+        Supabase ได้ปรับปรุงระบบ API Keys ใหม่เพื่อความปลอดภัยสูงสุด โดยคีย์แบบเก่าที่เป็น JWT (<code>anon</code> และ <code>service_role</code>) <strong>จะถูกยกเลิกการใช้งาน (Deprecated) ภายในสิ้นปี 2026</strong> แนะนำให้เปลี่ยนมาใช้คีย์รูปแบบใหม่ <code>sb_publishable_xxx</code> และ <code>sb_secret_xxx</code> แทนในโปรเจคใหม่ทั้งหมด<br>
+        <em>หมายเหตุ: คีย์ทั้ง 2 รูปแบบสามารถทำงานร่วมกันได้พร้อมกัน และคีย์แบบเก่าจะยังคงใช้ได้จนกว่าจะกด Disable ใน Dashboard</em>
       </div>
 
-      <div class="step">
-        <div class="step-title"><span class="dot">2</span>เข้าหัวข้อ API / API Keys</div>
-        <p>ในเมนูการตั้งค่า ให้เลือกหัวข้อ <strong>API</strong> (หรือ <strong>API Keys / Data API</strong> ขึ้นอยู่กับเวอร์ชัน UI)</p>
+      <!-- 3.3 Publishable Keys -->
+      <h3>3.3 รายละเอียดและการทำงานของ Publishable Keys</h3>
+      <p>Publishable keys ใช้สำหรับส่วนของแอปพลิเคชันที่เป็น สาธารณะ (Public components) เช่น หน้าเว็บ HTML/React หรือแอปมือถือ ซึ่งเป็นไปไม่ได้ที่จะซ่อนกุญแจลับไว้ในซอร์สโค้ด</p>
+
+      <p><strong>การทำงานร่วมกับ Supabase Auth &amp; Postgres Roles:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>API Key ที่ใช้</th>
+            <th>สถานะการ ล็อกอิน ผ่าน Supabase Auth</th>
+            <th>Postgres Role ที่ใช้ตรวจสอบ RLS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Publishable key</td>
+            <td>ยังไม่ได้ล็อกอิน (No)</td>
+            <td><code>anon</code></td>
+          </tr>
+          <tr>
+            <td>Publishable key</td>
+            <td>ล็อกอินแล้ว (Yes)</td>
+            <td><code>authenticated</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>🛡️ ข้อพิจารณาด้านความปลอดภัยของ Publishable Keys:</strong><br>
+        ผู้ใช้ทั่วไปหรือผู้ไม่หวังดีสามารถดึงคีย์ Publishable ไปได้เสมอผ่าน F12 (Network Inspector) หรือการ Reverse Engineering ดังนั้นการป้องกันข้อมูลของ Supabase จึงขึ้นอยู่กับ <strong>Postgres Row Level Security (RLS)</strong><br>
+        &bull; <strong>ต้องเปิดใช้งาน Row Level Security (RLS) บนทุกตารางเสมอ</strong><br>
+        &bull; ตรวจสอบ RLS Policies ของบทบาท <code>anon</code> และ <code>authenticated</code> ให้รัดกุมอยู่เสมอ
       </div>
 
-      <div class="step">
-        <div class="step-title"><span class="dot">3</span>คัดลอก SUPABASE_URL และ คีย์ต่างๆ</div>
+      <!-- 3.4 Secret Keys -->
+      <h3>3.4 ข้อควรระวังอย่างเข้มงวดและแนวทางปฏิบัติสำหรับ Secret Keys</h3>
+      <p>Secret Key เปรียบเสมือน <strong>"กุญแจผี (Master Key)"</strong> เข้าถึงและแก้ไขฐานข้อมูลได้ทั้งหมดผ่าน Postgres Role <code>service_role</code> โดยจะ <strong>ข้ามการตรวจ RLS ทั้งหมด (BYPASSRLS)</strong></p>
+
+      <p><strong>คุณสมบัติพิเศษของ Secret Key ใหม่ (<code>sb_secret_...</code>):</strong></p>
+      <ul>
+        <li>หากนำ Secret Key ไปยิงผ่าน Web Browser โดยตรง ระบบ Supabase จะตรวจสอบ <code>User-Agent</code> และปฏิเสธคำขอทันทีด้วยข้อผิดพลาด <code>HTTP 401 Unauthorized</code> เพื่อป้องกันความผิดพลาด</li>
+      </ul>
+
+      <div class="warn">
+        <strong>⛔ ข้อห้ามเด็ดขาด (DO NOT):</strong>
         <ul>
-          <li><strong>SUPABASE_URL:</strong> คัดลอกค่าจากช่อง <strong>Project URL</strong> (รูปแบบ <code>https://xyz.supabase.co</code>)</li>
-          <li><strong>SUPABASE_PUBLISHABLE_KEY:</strong> คัดลอกค่าจากช่อง <code>anon</code> / <code>public</code> (เป็นคีย์ที่ปลอดภัยสำหรับฝั่ง Client/Public)</li>
-          <li><strong>SUPABASE_SECRET_KEY:</strong> คัดลอกค่าจากช่อง <code>service_role</code> / <code>secret</code> (เป็นคีย์สิทธิ์สูงสุด ห้ามเปิดเผยเด็ดขาด ใช้เฉพาะฝั่ง Node.js Backend)</li>
-          <li><strong>SUPABASE_JWKS_URL:</strong> นำ Project URL มาต่อท้ายด้วย <code>/auth/v1/.well-known/jwks.json</code> หรือดูในส่วน <strong>JWT Settings</strong></li>
+          <li><strong>ห้าม</strong> ใส่ Secret Key ในหน้าเว็บ, ซอร์สโค้ดฝั่ง Client, Public Document หรือ Bundle รวมในไฟล์ติดตั้งแอปมือถือ/Desktop</li>
+          <li><strong>ห้าม</strong> ส่งคีย์ผ่านแอปแชต (Line, Discord), Email หรือ SMS</li>
+          <li><strong>ห้าม</strong> ใช้งานผ่าน Web Browser แม้กระทั่งบน <code>localhost</code></li>
+          <li><strong>ห้าม</strong> ส่งคีย์ผ่าน URL หรือ Query Parameters (เนื่องจากมักถูกบันทึกใน Web Server Logs)</li>
         </ul>
       </div>
 
       <div class="note">
-        <strong>📚 แหล่งอ้างอิงวิธีหา API Keys:</strong> อ้างอิงเอกสารอย่างเป็นทางการของ Supabase: <a href="https://supabase.com/docs/guides/api/api-keys" target="_blank">Supabase Docs - API Keys & Credentials Setup</a>
+        <strong>✅ แนวทางปฏิบัติที่ดี (Best Practices for Secret Keys):</strong>
+        <ul>
+          <li>ใช้งาน Secret Key บนเครื่อง Server หรือระบบ Backend ที่คุณเป็นผู้ดูแลและควบคุมเองเท่านั้น</li>
+          <li>จัดเก็บไว้ใน Environment Variables (ไฟล์ <code>.env</code>) และ <strong>ห้าม Commit เข้า Git Repository</strong> โดยเด็ดขาด</li>
+          <li>แยกใช้ Secret Key คนละดอกสำหรับแต่ละ Backend Component เพื่อจำกัดความเสียหายหากเกิดการรั่วไหล</li>
+          <li>หากจำเป็นต้องแสดงใน Log ให้ตัดแสดงเฉพาะ 6 ตัวอักษรแรกเท่านั้น หรือเก็บในรูปแบบ SHA256 Hash</li>
+          <li><strong>หาก Secret Key รั่วไหล:</strong> ให้ไปที่ Dashboard &rarr; <strong>Settings > API Keys</strong> เพื่อสร้าง Secret Key ดอกใหม่ นำไปเปลี่ยนในระบบ Backend ให้เรียบร้อย แล้วทำการ <strong>Delete (ลบ) คีย์เก่าทิ้งทันที</strong> (การลบคีย์มีผลถาวร)</li>
+        </ul>
+      </div>
+
+      <!-- 3.5 Limitations & Differences -->
+      <h3>3.5 ข้อจำกัดและความแตกต่างที่ต้องรับมือ (Known Limitations)</h3>
+      <ul>
+        <li><strong>การส่ง Header:</strong> ไม่สามารถส่ง Publishable หรือ Secret key ใน <code>Authorization: Bearer ...</code> ได้ เว้นแต่ค่านั้นจะตรงกับ <code>apikey</code> header ทุกประการ</li>
+        <li><strong>Edge Functions:</strong> ปัจจุบัน Edge Functions รองรับการยืนยันตัวตน JWT ผ่านคีย์แบบเก่าเท่านั้น หากใช้ Publishable/Secret Key ใหม่ ต้องใส่ flag <code>--no-verify-jwt</code> และเขียนโค้ดเช็ก <code>apikey</code> header ภายใน Edge Function เอง</li>
+        <li><strong>Realtime Connections:</strong> การเชื่อมต่อ Realtime แบบสาธารณะจะจำกัดระยะเวลาไว้ที่ 24 ชั่วโมง เว้นแต่จะมีการยืนยันตัวตนผู้ใช้ผ่าน Supabase Auth</li>
+      </ul>
+
+      <!-- 3.6 How to get keys from dashboard -->
+      <h3>3.6 ขั้นตอนการคัดลอกคีย์มาใส่ไฟล์ Environment Variables (.env) แบบรวดเร็ว</h3>
+      <p>คุณสามารถก๊อปปี้ค่าทั้งหมดไปวางในไฟล์ <code>.env</code> ของโปรเจค Node.js Express ได้ง่าย ๆ ผ่านปุ่ม <strong>Connect</strong> ใน Supabase Dashboard ดังนี้:</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>สร้างไฟล์ .env ในโปรเจค</div>
+        <p>สร้างไฟล์ชื่อ <code>.env</code> ไว้ที่โฟลเดอร์หลัก (Root Directory) ของโปรเจค Node.js Express ของคุณ</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>เปิดหน้าต่าง Connect บน Supabase Dashboard</div>
+        <p>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a> เลือกโปรเจคของคุณ จากนั้นกดปุ่ม <strong>Connect</strong> (ปุ่มสีเขียวบริเวณแถบด้านบนของหน้าจอ)</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>เลือกแท็บ App Frameworks / Server Build APIs</div>
+        <p>ในหน้าต่าง Connect ให้เลือกแท็บ <strong>App Frameworks</strong> หรือ <strong>Server / Build APIs</strong></p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>คัดลอกค่าจากหัวข้อ Set environment variables</div>
+        <p>เลื่อนลงมาหาหัวข้อ <strong>Set environment variables</strong> (จะมีคำอธิบายระบุว่า <em>"Copy these into your environment so your handler can verify users and use supabase-js"</em>)</p>
+        <p>คุณจะพบกล่องข้อความที่มีปุ่ม <strong>Copy Snippet / Copy All</strong> กดปุ่มนั้นแล้วนำข้อความทั้งหมดไปวาง (Paste) ในไฟล์ <code>.env</code> ได้ทันที!</p>
+      </div>
+
+      <p>ตัวอย่างรูปแบบค่าที่จะได้ในไฟล์ <code>.env</code>:</p>
+      <div class="conn-str">
+SUPABASE_URL=https://&lt;your-project-id&gt;.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_... (หรือ anon JWT)
+SUPABASE_SECRET_KEY=sb_secret_... (หรือ service_role JWT - ใช้สำหรับ Node.js Backend)
+SUPABASE_JWKS_URL=https://&lt;your-project-id&gt;.supabase.co/auth/v1/.well-known/jwks.json
+      </div>
+
+      <div class="note">
+        <strong>💡 ทางเลือกเพิ่มเติม (Project Settings):</strong> หากต้องการคัดลอกคีย์ทีละตัว หรือต้องการสร้าง Secret key ดอกใหม่ สามารถไปที่ <strong>Project Settings &rarr; API / API Keys</strong> เพื่อสร้างและคัดลอกค่าได้เช่นกัน
+      </div>
+
+      <div class="note">
+        <strong>📚 แหล่งอ้างอิงเอกสาร API Keys:</strong> สามารถศึกษาเอกสารฉบับเต็มเพิ่มเติมได้ที่ <a href="https://supabase.com/docs/guides/api/api-keys" target="_blank">Supabase Docs - Understanding API Keys</a>
       </div>
     </section>
 
@@ -347,7 +684,7 @@ SUPABASE_JWKS_URL=https://&lt;your-project-id&gt;.supabase.co/auth/v1/.well-know
       <pre><code>npm install @supabase/supabase-js dotenv</code></pre>
 
       <h3>4.2 การกำหนดพิกัดความปลอดภัย (Environment Variables)</h3>
-      <p>นำค่าคีย์ที่ได้จากหัวข้อ 3 มาใส่ในไฟล์ <code>.env</code> ของโปรเจค ดังนี้:</p>
+      <p>นำค่าคีย์ที่คัดลอกจากหัวข้อ 3 (โดยเฉพาะวิธีรวดเร็วจาก <strong>หัวข้อ 3.6</strong> ผ่านปุ่ม <strong>Connect &rarr; Set environment variables &rarr; Copy Snippet</strong>) มาใส่ในไฟล์ <code>.env</code> ของโปรเจค ดังนี้:</p>
       <pre><code>SUPABASE_URL=https://klywhfmgmlicackbwuto.supabase.co
 SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -401,38 +738,99 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
         &bull; <strong>Session Pooler</strong> = เหมือน Transaction แต่เก็บที่นั่งให้ทั้งคอนเสิร์ต (Grafana ไม่ค่อยได้ใช้แบบนี้)
       </div>
 
-      <h3>5.1 ไปเอาที่อยู่มาจากไหน</h3>
+      <h3>5.1 ไปเอาที่อยู่ (Connection String) มาจากไหน</h3>
       <div class="note">
-        <strong>💡 คำแนะนำพิเศษ:</strong> สำหรับ Grafana แนะนำให้เลือกประเภท <strong>Transaction Pooler (พอร์ต 6543)</strong> เป็นหลัก เพราะช่วยคุมคิวและจัดการการเชื่อมต่อได้ดีที่สุด ไม่เกิดปัญหา Connection เต็ม (too many clients)
+        <strong>💡 คำแนะนำพิเศษ:</strong> สำหรับ Grafana แนะนำให้เลือก Connection Method เป็น <strong>Transaction pooler (พอร์ต 6543)</strong> เป็นหลัก เพราะช่วยคุมคิวและจัดการการเชื่อมต่อได้ดีที่สุด ไม่เกิดปัญหา Connection เต็ม (too many clients)
       </div>
 
-      <p><strong>วิธีที่ 1 (เร็วที่สุดและแนะนำ):</strong> ใช้ปุ่ม Connect ที่หน้าโปรเจค</p>
-      <ol>
-        <li>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
-        <li>เลือกโปรเจคของคุณ</li>
-        <li>กดปุ่ม <strong>Connect</strong> สีเขียวตรงกลางจอด้านบน (ในหน้า Overview/Home ของโปรเจค)</li>
-        <li>ระบบจะให้เลือกว่าเป็น <strong>Connection แบบไหน</strong> ให้เลือก <strong>Transaction</strong> (แนะนำสุด) หรือ <strong>Direct</strong></li>
-        <li>จากนั้นเลือกประเภท <strong>URI</strong> แล้วคัดลอกข้อความมาใช้งาน</li>
-      </ol>
+      <p><strong>วิธีคัดลอกผ่านหน้าต่าง Connect (เร็วที่สุดและแนะนำ):</strong></p>
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>เปิดหน้าต่าง Connect</div>
+        <p>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a> เลือกโปรเจคของคุณ แล้วกดปุ่ม <strong>Connect</strong> สีเขียวบริเวณแถบด้านบน (เช่นเดียวกับหัวข้อ 3.6)</p>
+      </div>
 
-      <p><strong>วิธีที่ 2 (ทางเมนู):</strong> ใช้เมื่อหาเมนู Connect ไม่เจอ</p>
-      <ol>
-        <li>ไป <strong>Project Settings</strong> (มุมขวาล่างของหน้าจอ)</li>
-        <li>เมนูปัจจุบันของ Supabase จะเป็นแบบนี้: <strong>Settings &rarr; Configuration &rarr; General / Infrastructure / Integrations</strong>, <strong>API Keys</strong>, <strong>JWT Keys</strong>, <strong>Data API</strong>, <strong>Vault</strong> ฯลฯ (UI เปลี่ยนไปเรื่อย ๆ)</li>
-        <li>ที่อยู่ของฐานข้อมูล (host/port) และปุ่มแสดงรหัสผ่านจะอยู่ในส่วนที่เกี่ยวข้องกับฐานข้อมูล เช่น <strong>Configuration &rarr; Infrastructure</strong> หรือหน้า <strong>Connect</strong> — เลือกข้อมูล Connection String ของ <strong>Transaction Pooler</strong></li>
-      </ol>
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>เลือกแท็บ Direct Connection string</div>
+        <p>ในหน้าต่าง Connect ให้คลิกเลือกแท็บ <strong>Direct Connection string</strong> (หรือ <strong>Database Connection</strong>)</p>
+      </div>
 
-      <h3>5.2 รูปแบบของ Connection String ทั้ง 3 แบบ</h3>
-      <p>โครงสร้าง: <code>postgresql://ผู้ใช้:รหัสผ่าน@ที่อยู่:port/ชื่อฐานข้อมูล</code></p>
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>ตั้งค่า Connection Method &amp; Type</div>
+        <ul>
+          <li><strong>Connection Method:</strong> เลือกเป็น <code>Transaction pooler</code> (แนะนำที่สุดสำหรับ Grafana)</li>
+          <li><strong>Type:</strong> เลือกเป็น <code>URI</code> หรือ <code>Parameters</code></li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>ดูข้อมูลพารามิเตอร์ที่ได้จาก Supabase</div>
+        <p>Supabase จะแสดงค่าพารามิเตอร์การเชื่อมต่อแยกออกเป็นหัวข้อด้านล่าง ดังนี้:</p>
+        <div class="conn-str">
+host=aws-0-ap-northeast-1.pooler.supabase.com
+port=6543
+database=postgres
+user=postgres.klywhfmgmlicackbwuto
+password=[กดรูปดวงตาเพื่อดูรหัสผ่าน DB]
+        </div>
+      </div>
+
+      <!-- How to combine parameters -->
+      <h3>5.2 วิธีผสมข้อมูล (Combining Parameters) สำหรับ Grafana</h3>
+      <p>เมื่อได้ค่าพารามิเตอร์ทั้ง 5 ตัวมาจากขั้นตอน 5.1 แล้ว นำมาผสมใช้งานได้ 2 รูปแบบดังนี้:</p>
+
+      <p><strong>แบบที่ 1: ผสมเป็น Connection String (URI Format)</strong></p>
+      <p>ใช้สูตรผสมโครงสร้าง: <code>postgresql://[user]:[password]@[host]:[port]/[database]</code></p>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres</div>
+
+      <p><strong>แบบที่ 2: ผสมและนำไปใส่ช่องตั้งค่าใน Grafana Data Source (หัวข้อ 6.2)</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>ช่องใน Grafana</th>
+            <th>สูตรการนำค่ามาผสมใส่</th>
+            <th>ตัวอย่างค่าจริง</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Host</strong></td>
+            <td>นำ <code>host</code> มาต่อด้วย <code>:port</code></td>
+            <td><code>aws-0-ap-northeast-1.pooler.supabase.com:6543</code></td>
+          </tr>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td>ใส่ค่า <code>database</code> ตรง ๆ</td>
+            <td><code>postgres</code></td>
+          </tr>
+          <tr>
+            <td><strong>User</strong></td>
+            <td>ใส่ค่า <code>user</code> ตรง ๆ</td>
+            <td><code>postgres.klywhfmgmlicackbwuto</code></td>
+          </tr>
+          <tr>
+            <td><strong>Password</strong></td>
+            <td>ใส่รหัสผ่าน DB ที่กดดูจากไอคอนดวงตา</td>
+            <td><code>รหัสผ่าน DB ของคุณ</code></td>
+          </tr>
+          <tr>
+            <td><strong>TLS/SSL Mode</strong></td>
+            <td>เลือก <code>require</code> เสมอ</td>
+            <td><code>require</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>5.3 รูปแบบของ Connection String ทั้ง 3 แบบ (เปรียบเทียบ Port)</h3>
+      <p>ในการใช้งานทั่วไป Connection String ของ Supabase จะมี 3 ประเภทหลัก ดังนี้:</p>
 
       <p><strong>Direct Connection (พอร์ต 5432):</strong></p>
       <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@db.klywhfmgmlicackbwuto.supabase.co:5432/postgres</div>
 
-      <p><strong>Transaction Pooler (พอร์ต 6543):</strong></p>
-      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres</div>
+      <p><strong>Transaction Pooler (พอร์ต 6543 - แนะนำสำหรับ Grafana):</strong></p>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres</div>
 
       <p><strong>Session Pooler (พอร์ต 5432):</strong></p>
-      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres</div>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres</div>
 
       <table>
         <thead><tr><th>แบบ</th><th>Port</th><th>เหมาะกับ</th><th>ควรใช้กับ Grafana?</th></tr></thead>
@@ -443,16 +841,8 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
         </tbody>
       </table>
 
-      <h3>5.3 ค้นหา Database Password</h3>
-      <ol>
-        <li>กดปุ่ม <strong>Connect</strong> สีเขียวที่หน้าโปรเจค</li>
-        <li>เลือกรูปแบบ <strong>URI</strong> หรือ <strong>Connection string</strong> จะมีปุ่มแสดงรหัสผ่าน (eye icon) กดเพื่อดู</li>
-        <li>นำรหัสไปแทนที่ <code>YOUR_DB_PASSWORD</code> ในช่องบน ๆ</li>
-      </ol>
-
       <div class="warn">
-        <strong>ระวัง!</strong> รหัสผ่านนี้เป็นของจริง อย่าเอาไปแปะในโค้ดหรือ commit ลง GitHub
-        เก็บไว้ใน Grafana เป็น Secret ดีกว่า (ดูหัวข้อ 6)
+        <strong>ข้อระวังเรื่องรหัสผ่าน:</strong> รหัสผ่าน DB Password เป็นกุญแจสำคัญ ห้ามแปะไว้ในซอร์สโค้ดหรือ commit ลง GitHub โดยเด็ดขาด
       </div>
     </section>
 
@@ -705,6 +1095,96 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
 <footer>
   สร้างจากโค้ดจริงของโปรเจค esp32-project &middot; สอนแบบ ELI5 &middot; ถ้าเชื่อมไม่ได้ อ่านหัวข้อ 6 ก่อน!
 </footer>
+
+<!-- iOS Toast Notification Element -->
+<div class="ios-toast" id="iosToast">✓ คัดลอกเรียบร้อยแล้ว</div>
+
+<!-- iOS Floating Back-To-Top Button -->
+<div class="ios-back-top" id="backToTopBtn" onclick="scrollToTop()">↑</div>
+
+<script>
+  // Scroll Progress Bar & Back to Top Button
+  window.addEventListener('scroll', () => {
+    const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('progressBar').style.width = scrolled + '%';
+
+    const backToTop = document.getElementById('backToTopBtn');
+    if (winScroll > 300) {
+      backToTop.classList.add('show');
+    } else {
+      backToTop.classList.remove('show');
+    }
+  });
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // iOS Toast Notification Helper
+  function showToast(message) {
+    const toast = document.getElementById('iosToast');
+    toast.textContent = message || '✓ คัดลอกเรียบร้อยแล้ว';
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
+  // Automatically wrap code blocks and connection strings with iOS Copy Buttons
+  document.addEventListener('DOMContentLoaded', () => {
+    const targets = document.querySelectorAll('pre, .conn-str');
+    targets.forEach((el) => {
+      // Create wrapper
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block-wrapper';
+      el.parentNode.insertBefore(wrapper, el);
+      wrapper.appendChild(el);
+
+      // Create iOS Copy Button
+      const btn = document.createElement('button');
+      btn.className = 'ios-copy-btn';
+      btn.innerHTML = '📋 คัดลอก';
+      
+      btn.addEventListener('click', () => {
+        const textToCopy = el.innerText || el.textContent;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          btn.innerHTML = '✓ เรียบร้อย';
+          showToast('📋 คัดลอกข้อความลง Clipboard เรียบร้อย!');
+          setTimeout(() => {
+            btn.innerHTML = '📋 คัดลอก';
+          }, 2000);
+        }).catch(err => {
+          showToast('❌ ไม่สามารถคัดลอกได้');
+        });
+      });
+
+      wrapper.appendChild(btn);
+    });
+
+    // Active TOC Scroll Observer
+    const sections = document.querySelectorAll('section.card[id]');
+    const navLinks = document.querySelectorAll('.toc li a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= (sectionTop - 140)) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + current) {
+          a.classList.add('active');
+        }
+      });
+    });
+  });
+</script>
 
 </body>
 </html>
