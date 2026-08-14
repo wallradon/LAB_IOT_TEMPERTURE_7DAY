@@ -624,7 +624,7 @@
                                         "steps": [
                                             {
                                                 "color": "blue",
-                                                "value": null
+                                                "value": 0
                                             }
                                         ]
                                     }
