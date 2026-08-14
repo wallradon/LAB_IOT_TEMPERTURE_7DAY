@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือฉบับ ELI5: เชื่อม Grafana กับ Supabase (Project ESP32)</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f5f5f5;
+    --card: #ffffff;
+    --card-soft: #fafafa;
+    --ink: #111111;
+    --ink-soft: #555555;
+    --primary: #111111;
+    --primary-dark: #000000;
+    --accent: #444444;
+    --blue: #111111;
+    --red: #8b0000;
+    --border: #d4d4d4;
+    --code-bg: #f4f4f5;
+    --code-ink: #18181b;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Segoe UI", "Sarabun", "Leelawadee UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 60%, #2b2b2b 100%);
+    padding: 60px 24px 48px;
+    text-align: center;
+    border-bottom: 3px solid #000;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .hero h1 { font-size: clamp(28px, 5vw, 46px); font-weight: 800; color: #ffffff; }
+  .hero p { color: #bfbfbf; margin-top: 12px; font-size: 18px; }
+  .hero .stack {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px;
+  }
+  .hero .stack span {
+    background: #2b2b2b;
+    border: 1px solid #555555;
+    padding: 6px 14px; border-radius: 8px; font-size: 14px; color: #e5e5e5;
+  }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  .container { display: flex; gap: 28px; max-width: 1280px; margin: 40px auto; padding: 0 20px; align-items: flex-start; }
+
+  .toc {
+    width: 260px; flex-shrink: 0; position: sticky; top: 20px;
+    background: var(--bg-soft); border: 1px solid #000000; border-radius: var(--radius);
+    padding: 18px;
+  }
+  .toc h3 { font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li { counter-increment: toc; margin-bottom: 6px; }
+  .toc li a {
+    display: block; color: #333333; font-size: 14px; padding: 5px 8px; border-radius: 6px;
+  }
+  .toc li a::before { content: counter(toc, decimal-leading-zero) "  "; color: #000000; font-weight: 700; }
+  .toc li a:hover { background: #000000; color: #ffffff; text-decoration: none; }
+
+  .content { flex: 1; min-width: 0; }
+
+  /* ---------- Cards / Sections ---------- */
+  .card {
+    background: var(--card); color: var(--ink);
+    border-radius: var(--radius);
+    border: 1px solid #000000;
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  }
+  .card h2 {
+    font-size: 24px; font-weight: 800; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .card h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px; background: #000000;
+    color: #ffffff; font-size: 18px; font-weight: 800; flex-shrink: 0;
+  }
+  .card .lead { color: var(--ink-soft); margin-bottom: 18px; }
+  .card h3 { font-size: 18px; margin: 22px 0 10px; color: var(--primary-dark); }
+  .card p, .card li { margin-bottom: 8px; }
+  .card ul, .card ol { padding-left: 22px; }
+
+  .elvis {
+    background: #f2f2f2; border-left: 5px solid #000000;
+    padding: 14px 18px; border-radius: 8px; margin: 16px 0;
+    font-size: 15px;
+  }
+  .elvis strong { color: #000000; }
+
+  /* ---------- Code ---------- */
+  pre {
+    background: var(--code-bg); color: var(--code-ink);
+    border: 1px solid #000000;
+    padding: 16px 18px; border-radius: 10px; overflow-x: auto;
+    font-family: "Cascadia Code", Consolas, "JetBrains Mono", monospace;
+    font-size: 13.5px; line-height: 1.6; margin: 14px 0;
+  }
+  code {
+    font-family: "Cascadia Code", Consolas, "JetBrains Mono", monospace;
+    background: #e5e5e5; color: #000000;
+    padding: 1px 6px; border-radius: 5px; font-size: 13px;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .com { color: #737373; font-style: italic; }
+  .str { color: #444444; }
+  .k { color: #000000; font-weight: 700; }
+  .fn { color: #1f1f1f; font-weight: 700; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th { background: #000000; color: #ffffff; text-align: left; padding: 10px 12px; }
+  td { border-bottom: 1px solid var(--border); padding: 10px 12px; vertical-align: top; }
+  tr:nth-child(even) td { background: var(--card-soft); }
+
+  /* ---------- Steps ---------- */
+  .step {
+    border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+    margin: 16px 0; background: var(--card-soft);
+  }
+  .step .step-title { font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .step .step-title .dot {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; background: #000000;
+    color: #ffffff; font-size: 14px; font-weight: 800; flex-shrink: 0;
+  }
+
+  .note { background: #f2f2f2; border-left: 5px solid #444444; padding: 12px 16px; border-radius: 8px; margin: 14px 0; font-size: 14.5px; }
+  .warn { background: #f2f2f2; border-left: 5px solid #8b0000; padding: 12px 16px; border-radius: 8px; margin: 14px 0; font-size: 14.5px; }
+
+  .conn-str { background: #000000; color: #ffffff; font-family: monospace; padding: 14px 16px; border-radius: 10px; margin: 12px 0; font-size: 13.5px; overflow-x: auto; word-break: break-all; }
+
+  .flow-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin: 18px 0; }
+  .flow-box {
+    background: var(--bg-soft); border: 1px solid #000000; border-radius: 12px;
+    padding: 14px 16px; text-align: center; min-width: 120px;
+  }
+  .flow-box .icon { font-size: 26px; }
+  .flow-box .name { font-weight: 700; margin-top: 4px; }
+  .flow-box .sub { font-size: 12px; color: #666666; }
+  .flow-arrow { color: #000000; font-size: 22px; font-weight: 800; }
+
+  footer { text-align: center; color: #555555; padding: 40px 20px; font-size: 13px; }
+
+  @media (max-width: 900px) {
+    .container { flex-direction: column; }
+    .toc { position: static; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="badge">TUTORIAL &middot; ELI5 (Explain Like I'm 5)</div>
+  <h1>เชื่อม Grafana กับ Supabase<br>เพื่อทำ Dashboard แบบง่าย ๆ</h1>
+  <p>จากโค้ดโปรเจคจริง: ESP32 &rarr; Node.js Express API &rarr; Supabase &rarr; Grafana</p>
+  <div class="stack">
+    <span>ESP32 + DS18B20</span>
+    <span>Node.js / Express</span>
+    <span>Supabase (PostgreSQL)</span>
+    <span>Grafana</span>
+  </div>
+</header>
+
+<div class="container">
+  <!-- ============ TOC ============ -->
+  <nav class="toc">
+    <h3>สารบัญ</h3>
+    <ol>
+      <li><a href="#s1">ภาพรวมทั้งระบบ</a></li>
+      <li><a href="#s2">ดูโค้ดโปรเจคนี้ก่อน</a></li>
+      <li><a href="#s3">การเชื่อมต่อ Supabase กับ Node.js</a></li>
+      <li><a href="#s4">รู้จัก Connection String</a></li>
+      <li><a href="#s5">เปิด Grafana</a></li>
+      <li><a href="#s6">Add Data Source</a></li>
+      <li><a href="#s7">ทำ Dashboard แรกตาม Tutorial (ใช้กับ Supabase)</a></li>
+      <li><a href="#s8">ปัญหาเจอบ่อย + แก้ไข</a></li>
+      <li><a href="#s9">สรุป + ตารางคำศัพท์</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="content">
+
+    <!-- ============ 1 ============ -->
+    <section class="card" id="s1">
+      <h2><span class="num">1</span>ภาพรวมทั้งระบบ</h2>
+      <p class="lead">นี่คือเส้นทางข้อมูลในโปรเจคนี้ ข้อมูลวิ่งจากห้องจนถึงหน้าจอ Dashboard:</p>
+
+      <div class="flow-row">
+        <div class="flow-box"><div class="icon">&#127777;</div><div class="name">ESP32 + DS18B20</div><div class="sub">วัดอุณหภูมิ</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box"><div class="icon">&#128421;</div><div class="name">Node.js / Express API</div><div class="sub">POST /api/temp</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box"><div class="icon">&#128451;</div><div class="name">Supabase DB</div><div class="sub">ตาราง sensor_logs</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-box"><div class="icon">&#128200;</div><div class="name">Grafana</div><div class="sub">Dashboard กราฟ</div></div>
+      </div>
+
+      <p>สรุปเป็นประโยคง่าย ๆ:</p>
+      <ol>
+        <li><strong>ESP32</strong> อ่านอุณหภูมิจากเซนเซอร์ DS18B20 ทุก 5 นาที (แล้วเข้าดีปสลีป)</li>
+        <li>ESP32 ส่งค่าไปให้ <strong>Express API</strong> ด้วยคำสั่ง POST (เห็นได้ใน <code>ESP/ESP.ino</code>)</li>
+        <li>Express API เอาค่าไป <strong>insert เข้าตาราง</strong> ชื่อ <code>sensor_logs</code> ใน Supabase (เห็นได้ใน <code>server.js</code>)</li>
+        <li><strong>Grafana</strong> เชื่อมต่อกับ Supabase ผ่าน connection string แล้ววาดกราฟจากข้อมูลในตาราง</li>
+      </ol>
+    </section>
+
+    <!-- ============ 2 ============ -->
+    <section class="card" id="s2">
+      <h2><span class="num">2</span>ดูโค้ดโปรเจคนี้ก่อน</h2>
+      <p class="lead">เราต้องรู้ว่าข้อมูลถูกเก็บยังไงก่อน ถึงจะรู้ว่า Grafana ต้อง query ยังไง</p>
+
+      <h3>2.1 ESP32 ส่งข้อมูลไปที่ไหน</h3>
+      <p>ในไฟล์ <code>ESP/ESP.ino</code> ส่วนที่สำคัญที่สุดคือบรรทัดนี้ - บอก ESP32 ว่า "ไปส่งจดหมายที่ป้ายนี้":</p>
+      <pre><code><span class="com">// ESP/ESP.ino - บรรทัด 23</span>
+<span class="k">const char</span>* SERVER_URL = <span class="str">"https://lab-iot-temperture-7day.onrender.com/api/temp"</span>;</code></pre>
+
+      <p>แล้วส่งค่าอุณหภูมิในรูปแบบ JSON: <code>{"temperature": 25.50}</code></p>
+
+      <h3>2.2 Express API รับแล้วเก็บลง Supabase</h3>
+      <p>ในไฟล์ <code>server.js</code> มี 2 ส่วนหลัก:</p>
+
+      <p><strong>ส่วนที่ 1:</strong> สร้าง Supabase client (คีย์จากไฟล์ <code>.env</code>):</p>
+      <pre><code><span class="com">// server.js - บรรทัด 12-21</span>
+<span class="k">const</span> supabaseUrl = process.env.SUPABASE_URL;
+<span class="k">const</span> supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+<span class="k">const</span> supabase = <span class="fn">createClient</span>(supabaseUrl, supabaseKey);</code></pre>
+
+      <p><strong>ส่วนที่ 2:</strong> endpoint <code>/api/temp</code> เอา <code>temperature</code> ไป insert เข้าตาราง <code>sensor_logs</code>:</p>
+      <pre><code><span class="com">// server.js - บรรทัด 24-50</span>
+app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span class="k">async</span> (req, res) =&gt; {
+  <span class="k">const</span> { temperature } = req.body;
+  <span class="k">const</span> { data, error } = <span class="k">await</span> supabase
+    .<span class="fn">from</span>(<span class="str">'sensor_logs'</span>)
+    .<span class="fn">insert</span>([{ temperature: temperature }])
+    .<span class="fn">select</span>();
+  <span class="k">if</span> (error) { <span class="k">return</span> res.status(500).json({ error: <span class="str">'Database server error'</span> }); }
+  res.status(201).json({ message: <span class="str">'Temperature successfully saved to Supabase!'</span> });
+});</code></pre>
+
+      <h3>2.3 โครงสร้างตาราง sensor_logs (สมมติฐาน)</h3>
+      <p>ตาราง <code>sensor_logs</code> ใน Supabase มีหน้าตาประมาณนี้ (สร้างได้ที่เมนู <strong>Table Editor</strong>):</p>
+      <table>
+        <thead><tr><th>Column</th><th>Type</th><th>ความหมาย</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>int8 / uuid</td><td>เลขประจำแถว (auto)</td></tr>
+          <tr><td><code>temperature</code></td><td>float8 / numeric</td><td>ค่าอุณหภูมิที่ส่งมาจาก ESP32</td></tr>
+          <tr><td><code>created_at</code></td><td>timestamptz</td><td>เวลาที่ insert (Supabase เติมให้อัตโนมัติ ถ้าเปิด default)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>ข้อควรตรวจ:</strong> ดูว่าในตารางมีคอลัมน์เวลา <code>created_at</code> หรือเปล่า เพราะ Grafana ต้องการคอลัมน์เวลาในการวาดกราฟเส้น
+        ถ้าไม่มี ให้ไปเพิ่มคอลัมน์ <code>timestamptz</code> แล้วตั้งค่า default เป็น <code>now()</code>
+      </div>
+    </section>
+
+    <!-- ============ 3 ============ -->
+    <section class="card" id="s3">
+      <h2><span class="num">3</span>การเชื่อมต่อ Supabase กับ Node.js (Express)</h2>
+      <p class="lead">ในหัวข้อนี้เราจะอธิบายเบื้องหลังการทำงานว่า Node.js (Express) ของเราเชื่อมต่อและบันทึกข้อมูลไปยัง Supabase ได้อย่างไร</p>
+
+      <div class="elvis">
+        <strong>หลักการง่าย ๆ:</strong> Node.js ทำหน้าที่เป็น "บุรุษไปรษณีย์" ที่คอยรับอุณหภูมิมาจาก ESP32 แล้วนำไปหย่อนลงลิ้นชักตาราง <code>sensor_logs</code> ใน Supabase โดยใช้ library สำเร็จรูปชื่อ <code>@supabase/supabase-js</code>
+      </div>
+
+      <h3>3.1 การติดตั้ง Library ที่จำเป็น</h3>
+      <p>ก่อนเริ่มต้น เราต้องลงไลบรารีสำหรับควบคุม Supabase และอ่านไฟล์ตั้งค่าสิ่งแวดล้อม (environment variables):</p>
+      <pre><code>npm install @supabase/supabase-js dotenv</code></pre>
+
+      <h3>3.2 การกำหนดพิกัดความปลอดภัย (Environment Variables)</h3>
+      <p>ในไฟล์ <code>.env</code> ของโปรเจค เราจะเก็บ URL และ Key ลับไว้เพื่อป้องกันความปลอดภัย โดยมีหน้าตาประมาณนี้:</p>
+      <pre><code>SUPABASE_URL=https://klywhfmgmlicackbwuto.supabase.co
+SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
+
+      <h3>3.3 โค้ดเชื่อมต่อใน server.js</h3>
+      <p>เมื่อนำไลบรารีมาประกอบเข้ากับไฟล์ตั้งค่า โค้ดในการเปิดประตูเชื่อมต่อจะมีหน้าตาดังนี้:</p>
+      <pre><code><span class="com">// server.js</span>
+<span class="k">const</span> { createClient } = <span class="fn">require</span>(<span class="str">'@supabase/supabase-js'</span>);
+
+<span class="com">// 1. ดึงค่า URL และ KEY ลับมาจากไฟล์ .env</span>
+<span class="k">const</span> supabaseUrl = process.env.SUPABASE_URL;
+<span class="k">const</span> supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+
+<span class="com">// 2. สร้าง Client สำหรับควบคุมฐานข้อมูล</span>
+<span class="k">const</span> supabase = <span class="fn">createClient</span>(supabaseUrl, supabaseKey);</code></pre>
+
+      <h3>3.4 การนำข้อมูลใส่ลงตาราง (Insert Data)</h3>
+      <p>เมื่อ ESP32 ยิงข้อมูลอุณหภูมิมาที่ <code>POST /api/temp</code> เราจะแกะค่า <code>temperature</code> ออกมา แล้วสั่ง Supabase Client นำค่านี้ไปบันทึก:</p>
+      <pre><code><span class="com">// server.js</span>
+app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span class="k">async</span> (req, res) =&gt; {
+  <span class="k">const</span> { temperature } = req.body;
+
+  <span class="com">// ส่งข้อมูลไปบันทึกในตาราง 'sensor_logs'</span>
+  <span class="k">const</span> { data, error } = <span class="k">await</span> supabase
+    .<span class="fn">from</span>(<span class="str">'sensor_logs'</span>) <span class="com">// เลือกตาราง</span>
+    .<span class="fn">insert</span>([{ temperature: temperature }]) <span class="com">// ใส่ข้อมูลใหม่เป็น Array of Objects</span>
+    .<span class="fn">select</span>(); <span class="com">// คืนค่าข้อมูลแถวที่พึ่งจะเซฟกลับมาด้วย</span>
+
+  <span class="k">if</span> (error) {
+    console.<span class="fn">error</span>(<span class="str">'Error:'</span>, error.message);
+    <span class="k">return</span> res.status(500).json({ error: <span class="str">'Database error'</span> });
+  }
+
+  res.status(201).json({ message: <span class="str">'Saved successfully!'</span>, data });
+});</code></pre>
+
+      <div class="note">
+        <strong>เกร็ดความรู้เบื้องต้น:</strong> ฟังก์ชัน <code>.from().insert()</code> ของ Supabase คือการส่งข้อมูลแบบ HTTP Request ไปหาฐานข้อมูลของ Supabase เบื้องหลัง (เป็น REST API ที่เรียกกันว่า PostgREST) ทำให้เราไม่ต้องเขียนคำสั่ง SQL เพียว ๆ (เช่น <code>INSERT INTO ...</code>) ให้ยุ่งยากและยังมีความปลอดภัยสูง
+      </div>
+    </section>
+
+    <!-- ============ 4 ============ -->
+    <section class="card" id="s4">
+      <h2><span class="num">4</span>รู้จัก Connection String แบบ ELI5</h2>
+      <p class="lead">Connection string คือ "ที่อยู่สำหรับไปอ่านกล่องจดหมาย" มันเป็นข้อความเดียวที่บอกว่า จะไปที่ไหน เข้าประตูไหน และใช้กุญแจอะไร</p>
+
+      <div class="elvis">
+        <strong>อุปมา:</strong> บ้านมีอยู่ 3 ประตู แต่ห้องข้อมูลเป็นห้องเดียวกัน<br>
+        &bull; <strong>Direct Connection</strong> = ไปเคาะประตูบ้านตรง ๆ (เร็ว แต่ถ้าหลายคนใช้พร้อมกัน รถติด)<br>
+        &bull; <strong>Transaction Pooler</strong> = มีคุณลุงหน้าประตูคอยจัดการคิว ใครจะเข้าขอเข้า (เหมาะสมกับหลายการเชื่อมต่อ)<br>
+        &bull; <strong>Session Pooler</strong> = เหมือน Transaction แต่เก็บที่นั่งให้ทั้งคอนเสิร์ต (Grafana ไม่ค่อยได้ใช้แบบนี้)
+      </div>
+
+      <h3>4.1 ไปเอาที่อยู่มาจากไหน</h3>
+      <p><strong>วิธีที่ 1 (เร็วที่สุด):</strong> ใช้ปุ่ม Connect ที่หน้าโปรเจค</p>
+      <ol>
+        <li>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
+        <li>เลือกโปรเจค <code>klywhfmgmlicackbwuto</code> (หรือโปรเจคของคุณ)</li>
+        <li>กดปุ่ม <strong>Connect</strong> สีเขียวตรงกลางจอด้านบน (ในหน้า Overview/Home ของโปรเจค)</li>
+        <li>ระบบจะให้เลือกว่าเป็น <strong>Connection แบบไหน</strong> ให้เลือก <strong>Transaction</strong> หรือ <strong>Direct</strong></li>
+        <li>จากนั้นเลือก <strong>URI</strong> แล้วคัดลอกข้อความมา</li>
+      </ol>
+
+      <p><strong>วิธีที่ 2 (ทางเมนู):</strong> ใช้เมื่อหาเมนู Connect ไม่เจอ</p>
+      <ol>
+        <li>ไป <strong>Project Settings</strong> (มุมขวาล่างของหน้าจอ)</li>
+        <li>เมนูปัจจุบันของ Supabase จะเป็นแบบนี้: <strong>Settings &rarr; Configuration &rarr; General / Infrastructure / Integrations</strong>, <strong>API Keys</strong>, <strong>JWT Keys</strong>, <strong>Data API</strong>, <strong>Vault</strong> ฯลฯ (UI เปลี่ยนไปเรื่อย ๆ)</li>
+        <li>ที่อยู่ของฐานข้อมูล (host/port) และปุ่มแสดงรหัสผ่านจะอยู่ในส่วนที่เกี่ยวข้องกับฐานข้อมูล เช่น <strong>Configuration &rarr; Infrastructure</strong> หรือหน้า <strong>Connect</strong> — ถ้าหาไม่เจอ ให้กลับไปใช้วิธีที่ 1 (ปุ่ม Connect) แทน</li>
+      </ol>
+
+      <h3>4.2 รูปแบบของ Connection String ทั้ง 3 แบบ</h3>
+      <p>โครงสร้าง: <code>postgresql://ผู้ใช้:รหัสผ่าน@ที่อยู่:port/ชื่อฐานข้อมูล</code></p>
+
+      <p><strong>Direct Connection (พอร์ต 5432):</strong></p>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@db.klywhfmgmlicackbwuto.supabase.co:5432/postgres</div>
+
+      <p><strong>Transaction Pooler (พอร์ต 6543):</strong></p>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres</div>
+
+      <p><strong>Session Pooler (พอร์ต 5432):</strong></p>
+      <div class="conn-str">postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres</div>
+
+      <table>
+        <thead><tr><th>แบบ</th><th>Port</th><th>เหมาะกับ</th><th>ควรใช้กับ Grafana?</th></tr></thead>
+        <tbody>
+          <tr><td>Direct</td><td><code>5432</code></td><td>เครื่องมือเดียว เชื่อมน้อยครั้ง</td><td>ใช่ เหมาะสุดถ้าปิด pooler ได้</td></tr>
+          <tr><td>Transaction Pooler</td><td><code>6543</code></td><td>หลาย connection พร้อมกัน</td><td>ใช่ ตัวที่แนะนำ</td></tr>
+          <tr><td>Session Pooler</td><td><code>5432</code></td><td>ต้องการ session เดิมตลอด</td><td>ไม่ค่อยจำเป็น</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.3 ค้นหา Database Password</h3>
+      <ol>
+        <li>กดปุ่ม <strong>Connect</strong> สีเขียวที่หน้าโปรเจค (เหมือนหัวข้อ 4.1 วิธีที่ 1)</li>
+        <li>เลือกรูปแบบ <strong>URI</strong> หรือ <strong>Connection string</strong> จะมีปุ่มแสดงรหัสผ่าน (eye icon) กดเพื่อดู</li>
+        <li>นำรหัสไปแทนที่ <code>YOUR_DB_PASSWORD</code> ในช่องบน ๆ</li>
+      </ol>
+
+      <div class="warn">
+        <strong>ระวัง!</strong> รหัสผ่านนี้เป็นของจริง อย่าเอาไปแปะในโค้ดหรือ commit ลง GitHub
+        เก็บไว้ใน Grafana เป็น Secret ดีกว่า (ดูหัวข้อ 6) และแนะนำให้สร้าง <strong>Database Password แยก</strong> จากการตั้งค่า
+        "Direct Connection" ที่ allow IP แค่วง LAN ของคุณ เพื่อกันคนอื่นงัดกล่องจดหมาย
+      </div>
+
+      <h3>4.4 ตรวจสอบก่อนเชื่อม (บนเครื่องเรา)</h3>
+      <p>ลองทดสอบว่าที่อยู่นี้ใช้ได้หรือยัง ด้วยคำสั่ง (ถ้ามี <code>psql</code>):</p>
+      <pre><code><span class="k">psql</span> "postgresql://postgres.klywhfmgmlicackbwuto:YOUR_DB_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" <span class="k">-c</span> "select count(*) from sensor_logs;"</code></pre>
+      <p>ถ้าได้ตัวเลขกลับมา แปลว่าที่อยู่ถูกต้องแล้ว เราพร้อมไปหา Grafana ต่อ!</p>
+    </section>
+
+    <!-- ============ 5 ============ -->
+    <section class="card" id="s5">
+      <h2><span class="num">5</span>เปิด Grafana (ใช้ Grafana Cloud บนเว็บ)</h2>
+      <p class="lead">เราใช้ <strong>Grafana Cloud</strong> แบบเว็บ (ฟรี สะดวกสุด) ไม่ต้องติดตั้ง Docker ในเครื่อง</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>สมัคร Grafana Cloud</div>
+        <p>สมัครที่ <a href="https://grafana.com" target="_blank">grafana.com</a> (แผน Free ฟรี)</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>กด Launch เข้าหน้า Dashboard</div>
+        <p>กด <strong>Launch</strong> เข้าสู่ Grafana Cloud ได้ทันทีจากเบราว์เซอร์ ไม่ต้องติดตั้งอะไร</p>
+      </div>
+    </section>
+
+    <!-- ============ 6 ============ -->
+    <section class="card" id="s6">
+      <h2><span class="num">6</span>Add Data Source (บอก Grafana ว่าจะไปอ่านที่ไหน)</h2>
+      <p class="lead">นี่คือขั้นตอน "คุณลุง Grafana จำที่อยู่กล่องจดหมาย"</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>เข้าเมนู</div>
+        <p>ไปที่ <strong>Connections &rarr; Data sources &rarr; Add data source</strong></p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>เลือก PostgreSQL</div>
+        <p>พิมพ์ "postgres" ในช่องค้นหา แล้วเลือก <strong>PostgreSQL</strong></p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>กรอกข้อมูล</div>
+        <table>
+          <thead><tr><th>ช่องใน Grafana</th><th>ค่าที่ใส่</th></tr></thead>
+          <tbody>
+            <tr><td>Host</td><td><code>aws-0-ap-southeast-1.pooler.supabase.com:6543</code> <em>(Transaction Pooler)</em> หรือ <code>db.klywhfmgmlicackbwuto.supabase.co:5432</code> <em>(Direct)</em></td></tr>
+            <tr><td>Database</td><td><code>postgres</code></td></tr>
+            <tr><td>User</td><td><code>postgres.klywhfmgmlicackbwuto</code></td></tr>
+            <tr><td>Password</td><td>รหัสผ่าน DB ที่ได้จากหัวข้อ 4.3 (ใส่ในช่องนี้ Grafana เก็บเป็น secret ให้เอง)</td></tr>
+            <tr><td>TLS/SSL Mode</td><td><code>require</code> (Supabase บังคับ SSL เสมอ)</td></tr>
+          </tbody>
+        </table>
+        <div class="note">
+          <strong>จำได้ไหม?</strong> Host + User + Password นี้ประกอบกันเป็น connection string ในหัวข้อ 4
+          Grafana แค่ให้เราแยกกรอกทีละช่องนั่นเอง
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>กด Save &amp; Test</div>
+        <p>ถ้าเห็นข้อความสีเขียว <strong>"Database Connection OK"</strong> แปลว่าคุณลุงเจอกล่องจดหมายเจอแล้ว!</p>
+        <div class="warn">ถ้าเจอ <strong>"connecting host error"</strong> หรือ timeout มักมาจาก: พอร์ตผิด, ใส่ IP ผิด, หรือ Supabase ยังไม่เปิด allow IP สำหรับ Direct connection (ดูหัวข้อ 8)</div>
+      </div>
+    </section>
+
+    <!-- ============ 7 ============ -->
+    <section class="card" id="s7">
+      <h2><span class="num">7</span>ทำ Dashboard แรก ตาม Tutorial ของ Grafana (ใช้กับข้อมูล Supabase)</h2>
+      <p class="lead">ประยุกต์บทเรียน "Make your first dashboard" ของ Grafana มาทำกับข้อมูลอุณหภูมิของเราโดยตรง
+        แทนที่จะอ่านฟีดข่าว (Business News) เราจะเชื่อม <strong>PostgreSQL (Supabase)</strong> แล้ววาดกราฟจากตาราง <code>sensor_logs</code></p>
+
+      <div class="note">
+        <strong>ข้อดีของเรา:</strong> การเชื่อม PostgreSQL นั้น <strong>built-in มากับ Grafana อยู่แล้ว</strong> ไม่ต้องติดตั้ง plugin เพิ่ม
+        ขั้นตอนจึงเหมือน Tutorial เดิมแค่สลับจาก "ติดตั้ง plugin" เป็น "ตรวจสอบ built-in data source" และใช้ข้อมูลจากหัวข้อ 4-6
+      </div>
+
+      <h3>7.1 Step 1: ตรวจสอบ PostgreSQL Data Source (ไม่ต้องติดตั้ง plugin)</h3>
+      <p>ใน Tutorial เดิมต้องไปติดตั้ง Business News แต่ PostgreSQL มีให้อยู่แล้ว ขอแค่เช็คว่าพร้อมใช้:</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>เปิดเมนู Plugins &amp; Data</div>
+        <p>กด <strong>Administration &rarr; Plugins &amp; Data</strong> ในเมนูซ้ายมือ</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>กดปุ่ม Plugins</div>
+        <p>ในหน้า Administration ให้กดปุ่ม <strong>Plugins</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>ค้นหา "PostgreSQL"</div>
+        <p>ใช้ช่องค้นหา พิมพ์ <strong>PostgreSQL</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>เห็นสถานะ Built-in / Installed</div>
+        <p>จะเห็นว่า PostgreSQL เป็น <strong>built-in</strong> (ติดตั้งมาแล้ว) ไม่มีปุ่ม Install ให้กด
+          ถ้ามีปุ่ม Install จริง ๆ ก็กดติดตั้งได้เลย เท่านี้ก็พร้อมแล้ว</p>
+      </div>
+
+      <h3>7.2 Step 2: สร้าง Data Source (เชื่อม Supabase)</h3>
+      <p>Data source คือตัวบอกว่า "จะไปอ่านตารางไหน" เรากรอกข้อมูลการเชื่อมต่อ Supabase ตามหัวข้อ 6:</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>กด Connections</div>
+        <p>ในเมนูซ้ายมือ กด <strong>Connections</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>ค้นหา "PostgreSQL"</div>
+        <p>พิมพ์ <strong>PostgreSQL</strong> ในช่องค้นหา</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>กด PostgreSQL data source</div>
+        <p>กดป้าย <strong>PostgreSQL</strong> ในรายการ data source</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>กด Add new data source</div>
+        <p>กดปุ่ม <strong>Add new data source</strong> ที่มุมขวาบน</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">5</span>ตั้งชื่อและกรอกค่าจาก Supabase</div>
+        <table>
+          <thead><tr><th>ช่องใน Grafana</th><th>ค่าที่ใส่</th></tr></thead>
+          <tbody>
+            <tr><td>Name</td><td><code>Supabase</code></td></tr>
+            <tr><td>Host</td><td><code>aws-0-ap-southeast-1.pooler.supabase.com:6543</code> <em>(Transaction Pooler)</em></td></tr>
+            <tr><td>Database</td><td><code>postgres</code></td></tr>
+            <tr><td>User</td><td><code>postgres.klywhfmgmlicackbwuto</code></td></tr>
+            <tr><td>Password</td><td>รหัสผ่าน DB จากหัวข้อ 4.3</td></tr>
+            <tr><td>TLS/SSL Mode</td><td><code>require</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">6</span>กด Save &amp; Test</div>
+        <p>กดปุ่ม <strong>Save &amp; Test</strong> ถ้าขึ้นข้อความสีเขียว <strong>"Database Connection OK"</strong> แปลว่าเจอกล่องจดหมายเจอแล้ว (ไม่เหมือน Business News ที่อ่านฟีด)</p>
+      </div>
+
+      <h3>7.3 Step 3: สร้าง Dashboard (กราฟอุณหภูมิจาก sensor_logs)</h3>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>กด Dashboards</div>
+        <p>ในเมนูซ้ายมือ กด <strong>Dashboards</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>สร้าง Dashboard ใหม่</div>
+        <p>กดปุ่ม <strong>New &rarr; Dashboard</strong></p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>เพิ่ม Visualization</div>
+        <p>กด <strong>Add Visualization</strong> แล้วเลือก <strong>PostgreSQL (Supabase)</strong> ที่เพิ่งสร้าง</p>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>เลือกประเภท Time series และวาง Query</div>
+        <p>เลือกประเภท <strong>Time series</strong> เปลี่ยน Mode เป็น <strong>SQL</strong> แล้ววาง query นี้:</p>
+        <pre><code><span class="k">SELECT</span>
+  created_at <span class="k">AS</span> time,
+  temperature <span class="k">AS</span> value
+<span class="k">FROM</span> sensor_logs
+<span class="k">WHERE</span> created_at &gt; $__timeFrom()
+  <span class="k">AND</span> created_at &lt; $__timeTo()
+<span class="k">ORDER BY</span> created_at;</code></pre>
+      </div>
+      <div class="step">
+        <div class="step-title"><span class="dot">5</span>บันทึก Dashboard</div>
+        <p>กด <strong>Save Dashboard</strong> ตั้งชื่อเช่น <code>ESP32 Temperature</code> แล้วกด <strong>Save</strong> เสร็จเรียบร้อย!</p>
+      </div>
+
+      <div class="elvis">
+        <strong>สรุป:</strong> วงจรเดียวกันกับ Tutorial เดิม คือ <strong>data source &rarr; dashboard</strong> ต่างกันที่ของเราคือ PostgreSQL (Supabase)
+        ต่อกับตาราง <code>sensor_logs</code> ของ ESP32 ไม่ใช่ฟีดข่าว ถ้าอยากได้อุณหภูมิล่าสุดหรือค่าเฉลี่ย
+        ก็เพิ่ม query แบบรวมค่า (เช่น <code>AVG(temperature)</code>) แล้วใช้ Panel แบบ Stat/Gauge ได้เลย
+      </div>
+    </section>
+
+    <!-- ============ 8 ============ -->
+    <section class="card" id="s8">
+      <h2><span class="num">8</span>ปัญหาเจอบ่อย + วิธีแก้</h2>
+      <p class="lead">เจอ "คุณลุงไปกล่องจดหมายไม่ได้" ตรวจทีละข้อ</p>
+
+      <table>
+        <thead><tr><th>อาการ</th><th>สาเหตุที่เป็นไปได้</th><th>วิธีแก้</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Save &amp; Test เจอ "dial error / timeout"</td>
+            <td>ใส่พอร์ตผิด หรือใช้ Direct connection แต่ IP ไม่ได้ allow</td>
+            <td>ลอง Transaction Pooler พอร์ต <code>6543</code> ก่อน ถ้าจะใช้ Direct ให้กดปุ่ม <strong>Connect</strong> แล้วเปิด <strong>Direct Connection</strong> (allow IP) ที่อยู่ในการตั้งค่า database ของโปรเจค แล้ว allow IP ของเครื่อง/เซิร์ฟเวอร์ Grafana</td>
+          </tr>
+          <tr>
+            <td>"SSL error" หรือ "no pg_hba.conf entry"</td>
+            <td>TLS ยังไม่ require หรือ username ผิดรูปแบบ</td>
+            <td>ตั้ง SSL Mode = <code>require</code> และ User ต้องเป็น <code>postgres.&lt;project-ref&gt;</code> แบบเต็ม</td>
+          </tr>
+          <tr>
+            <td>เชื่อมต่อได้ แต่ panel ว่างเปล่า</td>
+            <td>Query ผิด หรือไม่มีข้อมูลในช่วงเวลาที่เลือก</td>
+            <td>ลอง query ง่าย ๆ: <code>select count(*) from sensor_logs;</code> แล้วลองกดช่วงเวลา "Last 24 hours"</td>
+          </tr>
+          <tr>
+            <td>"column created_at does not exist"</td>
+            <td>ตารางไม่มีคอลัมน์เวลา</td>
+            <td>ไปเพิ่มคอลัมน์ <code>created_at timestamptz default now()</code> ใน Table Editor</td>
+          </tr>
+          <tr>
+            <td>"too many clients"</td>
+            <td>ใช้ Direct connection ที่จำกัด 60 connections และ Grafana เปิดซ้ำ ๆ</td>
+            <td>สลับไปใช้ <strong>Transaction Pooler (6543)</strong> ซึ่งจัดการคิวให้เอง</td>
+          </tr>
+          <tr>
+            <td>Grafana เห็นแต่ข้อมูลเก่า</td>
+            <td>Refresh interval ช้ากว่ารอบการส่งข้อมูลของ ESP32</td>
+            <td>ตั้ง Refresh = 5m และช่วงเวลาให้ครอบคลุมหลาย ๆ ชั่วโมง</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 9 ============ -->
+    <section class="card" id="s9">
+      <h2><span class="num">9</span>สรุป + ตารางคำศัพท์</h2>
+
+      <h3>สรุปแบบกระชับ</h3>
+      <ol>
+        <li>ESP32 วัดอุณหภูมิ &rarr; ส่ง <code>{"temperature": xx}</code> ไป <code>/api/temp</code></li>
+        <li>Express เก็บลงตาราง <code>sensor_logs</code> ใน Supabase (รายละเอียดเพิ่มเติมอยู่ในหัวข้อ 3)</li>
+        <li>เปิด Grafana &rarr; Add Data source &rarr; PostgreSQL</li>
+        <li>กรอก host/password จาก connection string (แนะนำ Transaction Pooler พอร์ต 6543, SSL require)</li>
+        <li>สร้าง Dashboard พร้อม SQL query แล้วจบ!</li>
+      </ol>
+
+      <h3>ตารางคำศัพท์ (จดไว้ก่อนสอบ)</h3>
+      <table>
+        <thead><tr><th>คำศัพท์</th><th>ELI5</th><th>ในโปรเจคนี้</th></tr></thead>
+        <tbody>
+          <tr><td>API</td><td>พนักงานรับจดหมายที่รับคำสั่งแล้วไปทำงานให้</td><td><code>POST /api/temp</code> ใน server.js</td></tr>
+          <tr><td>Database</td><td>ตู้เอกสารยักษ์ที่เก็บจดหมายทุกฉบับ</td><td>Supabase (PostgreSQL)</td></tr>
+          <tr><td>Table</td><td>ชั้นในตู้เอกสารที่เก็บเรื่องเดียว</td><td><code>sensor_logs</code></td></tr>
+          <tr><td>Connection string</td><td>ที่อยู่ + กุญแจของตู้เอกสาร</td><td>ข้อความในหัวข้อ 4.2</td></tr>
+          <tr><td>Direct Connection</td><td>ประตูบ้านตรง ๆ ไม่มีคนคุมคิว</td><td>พอร์ต 5432, host db.*.supabase.co</td></tr>
+          <tr><td>Transaction Pooler</td><td>คุณลุงหน้าประตูจัดการคิว (เหมาะกับ Grafana)</td><td>พอร์ต 6543, host *.pooler.supabase.com</td></tr>
+          <tr><td>SSL</td><td>ซองจดหมายล็อกลับเฉพาะคนสองคนอ่านได้</td><td>ต้องเปิด <code>require</code> เสมอ</td></tr>
+          <tr><td>Query</td><td>คำถามที่ถามตู้เอกสารว่า "เอาข้อมูลแบบไหน"</td><td>SQL ในหัวข้อ 7</td></tr>
+          <tr><td>Dashboard</td><td>ผนังห้องที่ติดกราฟรูปสวยหลาย ๆ อัน</td><td>สิ่งที่เราสร้างในหัวข้อ 7</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>ทิ้งท้าย:</strong> ถ้าอยากรู้ "ESP32 ส่งจดหมายบ่อยแค่ไหน" ดูที่ <code>DEEP_SLEEP_TIME</code> ใน ESP.ino
+        ถ้าอยากรู้ "API เก็บยังไง" ดู server.js ถ้าอยากรู้ "Grafana อ่านยังไง" ดูหัวข้อ 7 จบครบทุกอย่างในโปรเจคนี้แล้ว
+      </div>
+    </section>
+
+    </main>
+</div>
+
+<footer>
+  สร้างจากโค้ดจริงของโปรเจค esp32-project &middot; สอนแบบ ELI5 &middot; ถ้าเชื่อมไม่ได้ อ่านหัวข้อ 7 ก่อน!
+</footer>
+
+</body>
+</html>
