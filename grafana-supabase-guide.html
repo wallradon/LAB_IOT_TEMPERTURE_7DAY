@@ -567,20 +567,24 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
       </div>
 
       <h3>8.1 ไปเอาที่อยู่มาจากไหน</h3>
-      <p><strong>วิธีที่ 1 (เร็วที่สุด):</strong> ใช้ปุ่ม Connect ที่หน้าโปรเจค</p>
+      <div class="note">
+        <strong>💡 คำแนะนำพิเศษ:</strong> สำหรับ Grafana แนะนำให้เลือกประเภท <strong>Transaction Pooler (พอร์ต 6543)</strong> เป็นหลัก เพราะช่วยคุมคิวและจัดการการเชื่อมต่อได้ดีที่สุด ไม่เกิดปัญหา Connection เต็ม (too many clients)
+      </div>
+
+      <p><strong>วิธีที่ 1 (เร็วที่สุดและแนะนำ):</strong> ใช้ปุ่ม Connect ที่หน้าโปรเจค</p>
       <ol>
         <li>เข้า <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
-        <li>เลือกโปรเจค <code>klywhfmgmlicackbwuto</code> (หรือโปรเจคของคุณ)</li>
+        <li>เลือกโปรเจคของคุณ</li>
         <li>กดปุ่ม <strong>Connect</strong> สีเขียวตรงกลางจอด้านบน (ในหน้า Overview/Home ของโปรเจค)</li>
-        <li>ระบบจะให้เลือกว่าเป็น <strong>Connection แบบไหน</strong> ให้เลือก <strong>Transaction</strong> หรือ <strong>Direct</strong></li>
-        <li>จากนั้นเลือก <strong>URI</strong> แล้วคัดลอกข้อความมา</li>
+        <li>ระบบจะให้เลือกว่าเป็น <strong>Connection แบบไหน</strong> ให้เลือก <strong>Transaction</strong> (แนะนำสุด) หรือ <strong>Direct</strong></li>
+        <li>จากนั้นเลือกประเภท <strong>URI</strong> แล้วคัดลอกข้อความมาใช้งาน</li>
       </ol>
 
       <p><strong>วิธีที่ 2 (ทางเมนู):</strong> ใช้เมื่อหาเมนู Connect ไม่เจอ</p>
       <ol>
         <li>ไป <strong>Project Settings</strong> (มุมขวาล่างของหน้าจอ)</li>
         <li>เมนูปัจจุบันของ Supabase จะเป็นแบบนี้: <strong>Settings &rarr; Configuration &rarr; General / Infrastructure / Integrations</strong>, <strong>API Keys</strong>, <strong>JWT Keys</strong>, <strong>Data API</strong>, <strong>Vault</strong> ฯลฯ (UI เปลี่ยนไปเรื่อย ๆ)</li>
-        <li>ที่อยู่ของฐานข้อมูล (host/port) และปุ่มแสดงรหัสผ่านจะอยู่ในส่วนที่เกี่ยวข้องกับฐานข้อมูล เช่น <strong>Configuration &rarr; Infrastructure</strong> หรือหน้า <strong>Connect</strong> — ถ้าหาไม่เจอ ให้กลับไปใช้วิธีที่ 1 (ปุ่ม Connect) แทน</li>
+        <li>ที่อยู่ของฐานข้อมูล (host/port) และปุ่มแสดงรหัสผ่านจะอยู่ในส่วนที่เกี่ยวข้องกับฐานข้อมูล เช่น <strong>Configuration &rarr; Infrastructure</strong> หรือหน้า <strong>Connect</strong> — เลือกข้อมูล Connection String ของ <strong>Transaction Pooler</strong></li>
       </ol>
 
       <h3>8.2 รูปแบบของ Connection String ทั้ง 3 แบบ</h3>
