@@ -1,0 +1,774 @@
+{
+    "apiVersion": "dashboard.grafana.app/v2",
+    "kind": "Dashboard",
+    "metadata": {
+        "name": "wag7kpn"
+    },
+    "spec": {
+        "annotations": [
+            {
+                "kind": "AnnotationQuery",
+                "spec": {
+                    "builtIn": true,
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "query": {
+                        "datasource": {
+                            "name": "-- Grafana --"
+                        },
+                        "group": "grafana",
+                        "kind": "DataQuery",
+                        "spec": {},
+                        "version": "v0"
+                    }
+                }
+            }
+        ],
+        "cursorSync": "Off",
+        "editable": true,
+        "elements": {
+            "panel-1": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "code",
+                                                "format": "table",
+                                                "rawSql": "SELECT temperature, created_at FROM sensor_logs ORDER BY created_at DESC LIMIT 50"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "ตารางแสดงข้อมูลอุณหภูมิล่าสุด",
+                    "id": 1,
+                    "links": [],
+                    "title": "📋 Data Logs",
+                    "vizConfig": {
+                        "group": "table",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "custom": {
+                                        "align": "center",
+                                        "cellOptions": {
+                                            "type": "auto"
+                                        },
+                                        "footer": {
+                                            "reducers": []
+                                        },
+                                        "inspect": false,
+                                        "wrapHeaderText": false,
+                                        "wrapText": false
+                                    },
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 35
+                                            }
+                                        ]
+                                    },
+                                    "unit": "celsius"
+                                },
+                                "overrides": [
+                                    {
+                                        "matcher": {
+                                            "id": "byName",
+                                            "options": "created_at"
+                                        },
+                                        "properties": [
+                                            {
+                                                "id": "unit",
+                                                "value": "dateTimeAsLocal"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "options": {
+                                "cellHeight": "md",
+                                "enablePagination": false,
+                                "showHeader": true,
+                                "sortBy": [
+                                    {
+                                        "desc": true,
+                                        "displayName": "created_at"
+                                    }
+                                ]
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            },
+            "panel-2": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "code",
+                                                "format": "time_series",
+                                                "rawSql": "SELECT created_at AS \"time\", temperature AS \"อุณหภูมิ (°C)\" FROM sensor_logs WHERE $__timeFilter(created_at) ORDER BY created_at ASC"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "กราฟแสดงแนวโน้มอุณหภูมิ",
+                    "id": 2,
+                    "links": [],
+                    "title": "📈 Temperature Trend",
+                    "transparent": true,
+                    "vizConfig": {
+                        "group": "timeseries",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "continuous-BlYlRd",
+                                        "seriesBy": "last"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "Temperature (°C)",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "barWidthFactor": 0.6,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 25,
+                                        "gradientMode": "opacity",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "smooth",
+                                        "lineStyle": {
+                                            "fill": "solid"
+                                        },
+                                        "lineWidth": 3,
+                                        "pointSize": 5,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "showValues": false,
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    },
+                                    "fieldMinMax": false,
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 35
+                                            }
+                                        ]
+                                    },
+                                    "unit": "celsius"
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "legend": {
+                                    "calcs": [],
+                                    "displayMode": "list",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "hideZeros": false,
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            },
+            "panel-3": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "builder",
+                                                "format": "table",
+                                                "rawSql": "SELECT MAX(temperature) FROM sensor_logs WHERE $__timeFilter(created_at)",
+                                                "sql": {
+                                                    "columns": [
+                                                        {
+                                                            "name": "MAX",
+                                                            "parameters": [
+                                                                {
+                                                                    "name": "temperature",
+                                                                    "type": "functionParameter"
+                                                                }
+                                                            ],
+                                                            "type": "function"
+                                                        }
+                                                    ],
+                                                    "groupBy": [
+                                                        {
+                                                            "property": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "groupBy"
+                                                        }
+                                                    ],
+                                                    "limit": 50
+                                                },
+                                                "table": "sensor_logs"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "",
+                    "id": 3,
+                    "links": [],
+                    "title": "🔥 Max Temp",
+                    "vizConfig": {
+                        "group": "stat",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "dark-blue",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "light-blue",
+                                                "value": 20
+                                            },
+                                            {
+                                                "color": "green",
+                                                "value": 25
+                                            },
+                                            {
+                                                "color": "#EAB839",
+                                                "value": 30
+                                            },
+                                            {
+                                                "color": "#EF843C",
+                                                "value": 35
+                                            },
+                                            {
+                                                "color": "#E24D42",
+                                                "value": 40
+                                            }
+                                        ]
+                                    },
+                                    "unit": "celsius"
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "auto",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "textMode": "auto"
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            },
+            "panel-4": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "code",
+                                                "format": "table",
+                                                "rawSql": "SELECT MIN(temperature) FROM sensor_logs WHERE $__timeFilter(created_at)"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "",
+                    "id": 4,
+                    "links": [],
+                    "title": "❄️ Min Temp",
+                    "vizConfig": {
+                        "group": "stat",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "dark-blue",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "light-blue",
+                                                "value": 20
+                                            },
+                                            {
+                                                "color": "green",
+                                                "value": 25
+                                            },
+                                            {
+                                                "color": "#EAB839",
+                                                "value": 30
+                                            },
+                                            {
+                                                "color": "#EF843C",
+                                                "value": 35
+                                            },
+                                            {
+                                                "color": "#E24D42",
+                                                "value": 40
+                                            }
+                                        ]
+                                    },
+                                    "unit": "celsius"
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "auto",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "textMode": "auto"
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            },
+            "panel-5": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "code",
+                                                "format": "table",
+                                                "rawSql": "SELECT AVG(temperature) FROM sensor_logs WHERE $__timeFilter(created_at)"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "",
+                    "id": 5,
+                    "links": [],
+                    "title": "📊 Avg Temp",
+                    "vizConfig": {
+                        "group": "stat",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "dark-blue",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "light-blue",
+                                                "value": 20
+                                            },
+                                            {
+                                                "color": "green",
+                                                "value": 25
+                                            },
+                                            {
+                                                "color": "#EAB839",
+                                                "value": 30
+                                            },
+                                            {
+                                                "color": "#EF843C",
+                                                "value": 35
+                                            },
+                                            {
+                                                "color": "#E24D42",
+                                                "value": 40
+                                            }
+                                        ]
+                                    },
+                                    "unit": "celsius"
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "auto",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "textMode": "auto"
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            },
+            "panel-6": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "ffv2rwfxzqh34e"
+                                            },
+                                            "group": "grafana-postgresql-datasource",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "dataset": "postgres",
+                                                "editorMode": "code",
+                                                "format": "table",
+                                                "rawSql": "SELECT COUNT(temperature) FROM sensor_logs WHERE $__timeFilter(created_at)"
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "จำนวนจุดข้อมูลทั้งหมด",
+                    "id": 6,
+                    "links": [],
+                    "title": "📍 Data Points",
+                    "vizConfig": {
+                        "group": "stat",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {},
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "blue",
+                                                "value": null
+                                            }
+                                        ]
+                                    }
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "colorMode": "value",
+                                "graphMode": "area",
+                                "justifyMode": "auto",
+                                "orientation": "auto",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "textMode": "auto"
+                            }
+                        },
+                        "version": "13.2.0-31683987170"
+                    }
+                }
+            }
+        },
+        "layout": {
+            "kind": "GridLayout",
+            "spec": {
+                "items": [
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-6"
+                            },
+                            "height": 6,
+                            "width": 6,
+                            "x": 0,
+                            "y": 0
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-3"
+                            },
+                            "height": 6,
+                            "width": 6,
+                            "x": 6,
+                            "y": 0
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-4"
+                            },
+                            "height": 6,
+                            "width": 6,
+                            "x": 12,
+                            "y": 0
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-5"
+                            },
+                            "height": 6,
+                            "width": 6,
+                            "x": 18,
+                            "y": 0
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-2"
+                            },
+                            "height": 11,
+                            "width": 16,
+                            "x": 0,
+                            "y": 6
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-1"
+                            },
+                            "height": 11,
+                            "width": 8,
+                            "x": 16,
+                            "y": 6
+                        }
+                    }
+                ]
+            }
+        },
+        "links": [],
+        "liveNow": true,
+        "preferences": {
+            "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                    "items": []
+                }
+            }
+        },
+        "preload": false,
+        "tags": [],
+        "timeSettings": {
+            "autoRefresh": "5s",
+            "autoRefreshIntervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ],
+            "fiscalYearStartMonth": 0,
+            "from": "now-6h",
+            "hideTimepicker": false,
+            "timezone": "browser",
+            "to": "now"
+        },
+        "title": "🌡️ Temperature Room Dashboard",
+        "variables": []
+    }
+}
