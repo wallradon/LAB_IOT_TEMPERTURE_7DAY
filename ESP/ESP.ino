@@ -97,9 +97,9 @@ void sendData(float temp) {
     Serial.println("💬 Server message: " + responseMessage);
     
     // Blink LED 1 time upon successful POST
-    digitalWrite(STATUS_LED_PIN, HIGH);
-    delay(200);
     digitalWrite(STATUS_LED_PIN, LOW);
+    delay(50);
+    digitalWrite(STATUS_LED_PIN, HIGH);
   } else {
     Serial.print("❌ Failed to send data. HTTP Error code: ");
     Serial.println(httpResponseCode);
@@ -119,7 +119,7 @@ void goToSleep() {
   digitalWrite(SENSOR_PIN, LOW);
   
   // Ensure the status LED is completely turned OFF to save power during Deep Sleep
-  digitalWrite(STATUS_LED_PIN, LOW);
+  digitalWrite(STATUS_LED_PIN, HIGH);
 
   Serial.println("💤 Entering Deep Sleep mode...");
   Serial.flush(); 
