@@ -316,7 +316,7 @@
                     "links": [],
                     "title": "🔥 Max Temp",
                     "vizConfig": {
-                        "group": "stat",
+                        "group": "gauge",
                         "kind": "VizConfig",
                         "spec": {
                             "fieldConfig": {
@@ -358,9 +358,16 @@
                                 "overrides": []
                             },
                             "options": {
-                                "colorMode": "background",
-                                "graphMode": "none",
-                                "justifyMode": "auto",
+                                "barShape": "rounded",
+                                "barWidthFactor": 0.57,
+                                "effects": {
+                                    "barGlow": false,
+                                    "centerGlow": false,
+                                    "gradient": true
+                                },
+                                "endpointMarker": "point",
+                                "minVizHeight": 75,
+                                "minVizWidth": 75,
                                 "orientation": "auto",
                                 "reduceOptions": {
                                     "calcs": [
@@ -369,7 +376,14 @@
                                     "fields": "",
                                     "values": false
                                 },
-                                "textMode": "auto"
+                                "segmentCount": 1,
+                                "segmentSpacing": 0.3,
+                                "shape": "gauge",
+                                "showThresholdLabels": false,
+                                "showThresholdMarkers": true,
+                                "sizing": "auto",
+                                "sparkline": true,
+                                "textMode": "value"
                             }
                         },
                         "version": "13.2.0-31683987170"
@@ -414,7 +428,7 @@
                     "links": [],
                     "title": "❄️ Min Temp",
                     "vizConfig": {
-                        "group": "stat",
+                        "group": "gauge",
                         "kind": "VizConfig",
                         "spec": {
                             "fieldConfig": {
@@ -456,9 +470,16 @@
                                 "overrides": []
                             },
                             "options": {
-                                "colorMode": "background",
-                                "graphMode": "none",
-                                "justifyMode": "auto",
+                                "barShape": "rounded",
+                                "barWidthFactor": 0.57,
+                                "effects": {
+                                    "barGlow": false,
+                                    "centerGlow": false,
+                                    "gradient": true
+                                },
+                                "endpointMarker": "point",
+                                "minVizHeight": 75,
+                                "minVizWidth": 75,
                                 "orientation": "auto",
                                 "reduceOptions": {
                                     "calcs": [
@@ -467,7 +488,14 @@
                                     "fields": "",
                                     "values": false
                                 },
-                                "textMode": "auto"
+                                "segmentCount": 1,
+                                "segmentSpacing": 0.3,
+                                "shape": "gauge",
+                                "showThresholdLabels": false,
+                                "showThresholdMarkers": true,
+                                "sizing": "auto",
+                                "sparkline": true,
+                                "textMode": "value"
                             }
                         },
                         "version": "13.2.0-31683987170"
@@ -512,7 +540,7 @@
                     "links": [],
                     "title": "📊 Avg Temp",
                     "vizConfig": {
-                        "group": "stat",
+                        "group": "gauge",
                         "kind": "VizConfig",
                         "spec": {
                             "fieldConfig": {
@@ -554,9 +582,16 @@
                                 "overrides": []
                             },
                             "options": {
-                                "colorMode": "background",
-                                "graphMode": "none",
-                                "justifyMode": "auto",
+                                "barShape": "rounded",
+                                "barWidthFactor": 0.57,
+                                "effects": {
+                                    "barGlow": false,
+                                    "centerGlow": false,
+                                    "gradient": true
+                                },
+                                "endpointMarker": "point",
+                                "minVizHeight": 75,
+                                "minVizWidth": 75,
                                 "orientation": "auto",
                                 "reduceOptions": {
                                     "calcs": [
@@ -565,7 +600,14 @@
                                     "fields": "",
                                     "values": false
                                 },
-                                "textMode": "auto"
+                                "segmentCount": 1,
+                                "segmentSpacing": 0.3,
+                                "shape": "gauge",
+                                "showThresholdLabels": false,
+                                "showThresholdMarkers": true,
+                                "sizing": "auto",
+                                "sparkline": true,
+                                "textMode": "value"
                             }
                         },
                         "version": "13.2.0-31683987170"
