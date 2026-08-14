@@ -264,20 +264,38 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
   res.status(201).json({ message: <span class="str">'Temperature successfully saved to Supabase!'</span> });
 });</code></pre>
 
-      <h3>2.3 โครงสร้างตาราง sensor_logs (สมมติฐาน)</h3>
-      <p>ตาราง <code>sensor_logs</code> ใน Supabase มีหน้าตาประมาณนี้ (สร้างได้ที่เมนู <strong>Table Editor</strong>):</p>
-      <table>
-        <thead><tr><th>Column</th><th>Type</th><th>ความหมาย</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>int8 / uuid</td><td>เลขประจำแถว (auto)</td></tr>
-          <tr><td><code>temperature</code></td><td>float8 / numeric</td><td>ค่าอุณหภูมิที่ส่งมาจาก ESP32</td></tr>
-          <tr><td><code>created_at</code></td><td>timestamptz</td><td>เวลาที่ insert (Supabase เติมให้อัตโนมัติ ถ้าเปิด default)</td></tr>
-        </tbody>
-      </table>
+      <h3>2.3 ขั้นตอนการสร้างฐานข้อมูลใน Supabase (Database Setup)</h3>
+      <p>อ้างอิงขั้นตอนสร้างจากคู่มือ <a href="https://refine.dev/blog/supabase-database-setup/" target="_blank">Refine - Supabase Database Setup Guide</a> โดยมีขั้นตอนง่าย ๆ ดังนี้:</p>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">1</span>สร้าง Project ใหม่บน Supabase</div>
+        <p>ไปที่ <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a> แล้วกด <strong>New Project</strong> ตั้งชื่อโปรเจค (เช่น <code>esp32-temp-monitoring</code>), กำหนดรหัสผ่าน <strong>Database Password</strong> และเลือก Region (เช่น Singapore)</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">2</span>สร้างตารางข้อมูล sensor_logs</div>
+        <p>ไปที่เมนู <strong>Table Editor</strong> ด้านซ้าย แล้วกด <strong>Create a new table</strong> ตั้งชื่อตารางว่า <code>sensor_logs</code></p>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">3</span>กำหนด Columns ให้ตาราง</div>
+        <table>
+          <thead><tr><th>Column</th><th>Type</th><th>การตั้งค่าเพิ่มเติม / ความหมาย</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>int8 / uuid</td><td>ตั้งเป็น Primary Key และเปิด Is Identity (Auto Increment)</td></tr>
+            <tr><td><code>temperature</code></td><td>float8 / numeric</td><td>ค่าอุณหภูมิที่ส่งมาจาก ESP32</td></tr>
+            <tr><td><code>created_at</code></td><td>timestamptz</td><td>ตั้งค่า Default Value เป็น <code>now()</code> เพื่อบันทึกเวลาอัตโนมัติ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="step">
+        <div class="step-title"><span class="dot">4</span>การตั้งค่าสิทธิ์ Row Level Security (RLS)</div>
+        <p>สามารถเลือกเปิด/ปิด RLS หรือกำหนด Policy เพื่อให้ Express API ของเราเข้าถึง (INSERT / SELECT) ข้อมูลได้ตามต้องการ</p>
+      </div>
 
       <div class="note">
-        <strong>ข้อควรตรวจ:</strong> ดูว่าในตารางมีคอลัมน์เวลา <code>created_at</code> หรือเปล่า เพราะ Grafana ต้องการคอลัมน์เวลาในการวาดกราฟเส้น
-        ถ้าไม่มี ให้ไปเพิ่มคอลัมน์ <code>timestamptz</code> แล้วตั้งค่า default เป็น <code>now()</code>
+        <strong>แหล่งอ้างอิงคู่มือสร้าง DB:</strong> สามารถอ่านรายละเอียดการตั้งค่าฐานข้อมูล Supabase เพิ่มเติมได้ที่ <a href="https://refine.dev/blog/supabase-database-setup/" target="_blank">refine.dev/blog/supabase-database-setup/</a>
       </div>
     </section>
 
@@ -565,6 +583,10 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
         ต่อกับตาราง <code>sensor_logs</code> ของ ESP32 ไม่ใช่ฟีดข่าว ถ้าอยากได้อุณหภูมิล่าสุดหรือค่าเฉลี่ย
         ก็เพิ่ม query แบบรวมค่า (เช่น <code>AVG(temperature)</code>) แล้วใช้ Panel แบบ Stat/Gauge ได้เลย
       </div>
+
+      <div class="note">
+        <strong>แหล่งอ้างอิงสำหรับส่วนนี้:</strong> เรียนรู้พื้นฐานการทำ Supabase ร่วมกับ Node.js เพิ่มเติมได้จากบทความ <a href="https://medium.com/@sevicdev/supabase-basics-with-node-js-e3d6b302ebd9" target="_blank">Medium - Supabase Basics with Node.js by Sevic Dev</a>
+      </div>
     </section>
 
     <!-- ============ 8 ============ -->
@@ -637,6 +659,12 @@ app.<span class="fn">post</span>(<span class="str">'/api/temp'</span>, <span cla
           <tr><td>Dashboard</td><td>ผนังห้องที่ติดกราฟรูปสวยหลาย ๆ อัน</td><td>สิ่งที่เราสร้างในหัวข้อ 7</td></tr>
         </tbody>
       </table>
+
+      <h3>📚 แหล่งอ้างอิง (References)</h3>
+      <ul>
+        <li><strong>คู่มือการตั้งค่าฐานข้อมูล Supabase:</strong> <a href="https://refine.dev/blog/supabase-database-setup/" target="_blank">https://refine.dev/blog/supabase-database-setup/</a></li>
+        <li><strong>การใช้งาน Supabase ร่วมกับ Node.js / Express:</strong> <a href="https://medium.com/@sevicdev/supabase-basics-with-node-js-e3d6b302ebd9" target="_blank">https://medium.com/@sevicdev/supabase-basics-with-node-js-e3d6b302ebd9</a></li>
+      </ul>
 
       <div class="note">
         <strong>ทิ้งท้าย:</strong> ถ้าอยากรู้ "ESP32 ส่งจดหมายบ่อยแค่ไหน" ดูที่ <code>DEEP_SLEEP_TIME</code> ใน ESP.ino
