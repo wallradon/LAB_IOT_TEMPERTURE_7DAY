@@ -51,20 +51,32 @@ app.post('/api/temp', async (req, res) => {
 
 // Endpoint for reading temperature history from Supabase
 app.get('/api/temp', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  try {
+    let query = supabase.from('sensor_logs').select('*');
 
-  const { data, error } = await supabase
-    .from('sensor_logs')
-    .select('temperature, created_at')
-    .order('created_at', { ascending: true })
-    .limit(limit);
+    // If a limit query param is provided (and not 'all'), fetch the newest 'limit' records
+    if (req.query.limit && req.query.limit !== 'all') {
+      const limit = parseInt(req.query.limit, 10);
+      if (!isNaN(limit) && limit > 0) {
+        const { data, error } = await query
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-  if (error) {
+        if (error) throw error;
+        return res.status(200).json({ data: data.reverse() });
+      }
+    }
+
+    // Otherwise, bring all data ordered chronologically
+    const { data, error } = await query.order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    res.status(200).json({ data: data });
+  } catch (error) {
     console.error('❌ Failed to read data from Supabase:', error.message);
-    return res.status(500).json({ error: 'Database server error' });
+    res.status(500).json({ error: 'Database server error' });
   }
-
-  res.status(200).json({ data: data });
 });
 
 app.listen(port, () => {
