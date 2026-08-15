@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOT Pipeline ELI5 + Deep Dive | Black &amp; White Guide</title>
+<style>
+  :root {
+    --ink: #0A0A0A;
+    --ink-soft: #3D3D3D;
+    --ink-mid: #777777;
+    --ink-faint: #A6A6A6;
+    --paper: #FFFFFF;
+    --paper-soft: #F4F4F4;
+    --paper-card: #FAFAFA;
+    --line: #D9D9D9;
+    --line-strong: #B0B0B0;
+    --radius-lg: 24px;
+    --radius-md: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Sarabun", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.75;
+    font-weight: 450;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Fixed Top Nav ---------- */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid var(--line);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .nav-inner {
+    width: 100%;
+    max-width: 1060px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-brand {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-brand .dot {
+    width: 10px; height: 10px;
+    background: var(--ink);
+    border-radius: 50%;
+  }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+  }
+  .nav-links a:hover { background: var(--paper-soft); color: var(--ink); }
+  @media (max-width: 640px) { .nav-links a { display: none; } .nav-links a:last-child { display: block; } }
+
+  main { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 140px 24px 60px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid var(--line-strong);
+    padding: 6px 14px;
+    border-radius: 999px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5.5vw, 54px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1.15;
+    max-width: 820px;
+    margin: 0 auto 18px;
+  }
+  .hero p.lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 680px;
+    margin: 0 auto;
+    font-weight: 500;
+  }
+  .hero .scroll-hint {
+    margin-top: 40px;
+    color: var(--ink-mid);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  /* ---------- Flow Strip ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 8px 0 80px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .flow .step {
+    flex: 1;
+    min-width: 180px;
+    padding: 22px 18px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .flow .step:last-child { border-right: none; }
+  .flow .num { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--ink-faint); }
+  .flow .name { font-size: 15px; font-weight: 800; margin: 4px 0 2px; }
+  .flow .desc { font-size: 12px; color: var(--ink-mid); }
+  .flow .arrow {
+    position: absolute;
+    right: -11px; top: 50%;
+    transform: translateY(-50%);
+    width: 22px; height: 22px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    z-index: 2;
+  }
+  .flow .step:last-child .arrow { display: none; }
+
+  /* ---------- Sections ---------- */
+  section.phase { padding: 60px 0; border-top: 1px solid var(--line); }
+  .phase-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 14px; }
+  .phase-badge {
+    font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+    border: 1px solid var(--ink); padding: 4px 10px; border-radius: 6px;
+    white-space: nowrap;
+  }
+  .phase-title { font-size: clamp(26px, 4vw, 36px); font-weight: 900; letter-spacing: -1px; }
+  .phase-sub { font-size: 16px; color: var(--ink-soft); margin-bottom: 34px; max-width: 720px; }
+
+  .analogy {
+    background: var(--paper-soft);
+    border-left: 3px solid var(--ink);
+    padding: 18px 22px;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin-bottom: 30px;
+  }
+  .analogy .label {
+    font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--ink-mid); margin-bottom: 4px;
+  }
+  .analogy p { font-size: 16px; font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    transition: all 0.2s ease;
+    align-self: start;
+  }
+  .card:hover { border-color: var(--ink); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+  .card .tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--paper); background: var(--ink);
+    padding: 3px 9px; border-radius: 999px; margin-bottom: 10px;
+  }
+  .card h3 { font-size: 17px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .card > p { font-size: 14px; color: var(--ink-soft); }
+  .card .learn { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ink); }
+  .card .learn::before { content: "▸ "; }
+
+  /* ---------- Deep Dive ---------- */
+  details.deep {
+    margin-top: 16px;
+    border-top: 1px dashed var(--line-strong);
+    padding-top: 14px;
+  }
+  details.deep summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--ink);
+    padding: 10px 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  details.deep summary:hover { background: var(--ink); color: var(--paper); }
+  details.deep summary::after { content: " ▼"; font-size: 10px; }
+  details.deep[open] summary { background: var(--ink); color: var(--paper); }
+  details.deep[open] summary::after { content: " ▲"; }
+
+  .deep-body { margin-top: 14px; }
+  .deep-body h4 {
+    font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink-mid); margin: 16px 0 8px;
+  }
+  .deep-body h4:first-child { margin-top: 0; }
+  .deep-body ul { list-style: none; padding: 0; }
+  .deep-body ul li {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    padding: 5px 0 5px 18px;
+    position: relative;
+  }
+  .deep-body ul li::before {
+    content: "–";
+    position: absolute;
+    left: 2px; top: 5px;
+    color: var(--ink-mid);
+    font-weight: 700;
+  }
+  .deep-body .hl { font-weight: 800; color: var(--ink); }
+
+  pre.code {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  pre.code .c { color: #8E8E8E; }   /* comment grey */
+  pre.code .k { color: #F0F0F0; font-weight: 700; }
+
+  .warn {
+    background: var(--paper-soft);
+    border-left: 3px solid var(--line-strong);
+    padding: 10px 14px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  .warn b { color: var(--ink); }
+
+  .key-points { margin: 28px 0 0; padding: 0; list-style: none; }
+  .key-points li {
+    display: flex; gap: 12px; padding: 10px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px; color: var(--ink-soft);
+  }
+  .key-points li:last-child { border-bottom: none; }
+  .key-points .mark {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--ink); border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 3px;
+  }
+
+  /* ---------- Big Story / Journey ---------- */
+  .journey { padding: 60px 0; border-top: 1px solid var(--line); }
+  .journey h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 900; letter-spacing: -1px; margin-bottom: 10px; }
+  .journey .sub { color: var(--ink-soft); margin-bottom: 34px; }
+  .timeline { position: relative; padding-left: 30px; }
+  .timeline::before {
+    content: "";
+    position: absolute; left: 7px; top: 6px; bottom: 6px;
+    width: 2px; background: var(--line-strong);
+  }
+  .tl-item { position: relative; padding: 0 0 32px 16px; }
+  .tl-item::before {
+    content: "";
+    position: absolute; left: -30px; top: 6px;
+    width: 14px; height: 14px;
+    background: var(--paper); border: 2.5px solid var(--ink); border-radius: 50%;
+  }
+  .tl-item h3 { font-size: 17px; font-weight: 800; }
+  .tl-item .who { font-size: 12px; font-weight: 700; color: var(--ink-mid); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .tl-item p { font-size: 14px; color: var(--ink-soft); }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--ink-mid);
+    font-size: 13px;
+  }
+  footer .b { color: var(--ink); font-weight: 800; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand"><span class="dot"></span> IOT PIPELINE <span style="color:var(--ink-mid);font-weight:600;">ELI5 + Deep Dive</span></div>
+    <div class="nav-links">
+      <a href="#p1">1. ESP32</a>
+      <a href="#p2">2. Node.js</a>
+      <a href="#p3">3. Supabase</a>
+      <a href="#p4">4. Grafana</a>
+      <a href="#story">เส้นทางข้อมูล</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <span class="eyebrow">Project ESP32 · Black &amp; White</span>
+  <h1>จากเซนเซอร์ ถึงหน้าจอ Dashboard<br>เข้าใจง่ายแบบ ELI5 + เจาะลึกโค้ดจริง</h1>
+  <p class="lead">ทุกการ์ดมีปุ่ม <strong>"เจาะลึกทางเทคนิค"</strong> กดเปิดได้ — ข้างในมีวิธีทำงานจริง โค้ดตัวอย่าง และจุดที่พลาดบ่อย</p>
+  <div class="scroll-hint">เลื่อนลง ↓</div>
+</header>
+
+<main>
+
+  <!-- Flow overview -->
+  <div class="flow reveal">
+    <div class="step">
+      <div class="num">PHASE 1</div>
+      <div class="name">ESP32 📟</div>
+      <div class="desc">จับข้อมูลที่โลกจริง</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="num">PHASE 2</div>
+      <div class="name">Node.js ⚙️</div>
+      <div class="desc">รับ-ส่งข้อมูลให้ปลอดภัย</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="num">PHASE 3</div>
+      <div class="name">Supabase 🗄️</div>
+      <div class="desc">โกดังเก็บข้อมูล</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="step">
+      <div class="num">PHASE 4</div>
+      <div class="name">Grafana 📊</div>
+      <div class="desc">วาดกราฟให้อ่านง่าย</div>
+      <div class="arrow">→</div>
+    </div>
+  </div>
+
+  <!-- ============ PHASE 1 ============ -->
+  <section class="phase" id="p1">
+    <div class="phase-head reveal">
+      <span class="phase-badge">PHASE 1</span>
+      <h2 class="phase-title">ต้นทางข้อมูล · Hardware &amp; IoT (ESP32)</h2>
+    </div>
+    <p class="phase-sub reveal">ด่านหน้าที่สุด — บอร์ดเล็กๆ ที่คอยจับตาดูโลกจริง (วัดอุณหภูมิ วัดความชื้น) แล้วเขียนจดหมายส่งออกไป</p>
+
+    <div class="analogy reveal">
+      <div class="label">เปรียบเทียบง่ายๆ</div>
+      <p>ลองนึกว่า ESP32 เป็น <strong>ทหารยาม</strong> ที่ยืนเฝ้าหน้าด่าน: เจออะไรก็จดบันทึก (อ่านเซนเซอร์) แล้วส่งโทรเลข (HTTP POST) ไปให้หัวหน้า ซึ่งระหว่างรอก็แอบหลับประหยัดพลังงาน (Deep Sleep)</p>
+    </div>
+
+    <div class="grid">
+      <!-- Card 1.1 -->
+      <div class="card reveal">
+        <span class="tag">ภาษา</span>
+        <h3>C/C++ + Arduino Framework</h3>
+        <p>ภาษาที่ใช้สั่งบอร์ด เช่น ตั้งค่า Wi-Fi, อ่านค่าจากขาเซนเซอร์ เหมือนภาษาเดียวกับเจ้าของบอร์ดใช้พูดคุยกับมัน</p>
+        <div class="learn">เข้าใจวิธีตั้งค่า Wi-Fi และอ่านค่าพิน</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>โค้ด Arduino มี <span class="hl">2 ส่วนตายตัว</span>: <span class="hl">setup()</span> รันครั้งเดียวตอนเปิดเครื่อง (ตั้ง Wi-Fi, ตั้งขา) และ <span class="hl">loop()</span> รันซ้ำไม่รู้จบ</li>
+              <li>เบื้องหลัง Arduino Framework เรียกใช้ ESP-IDF (SDK ของแท้ของ ESP32) อีกที — เราเขียนภาษาง่ายๆ แต่คอมไพล์เป็นเครื่องจักรจริงๆ</li>
+              <li><span class="hl">Serial.begin(115200)</span> เปิดช่องสื่อสารกับคอมพิวเตอร์ผ่าน USB เพื่อดู Log และค่า Debug</li>
+              <li><span class="hl">pinMode()</span> ตั้งทิศทางของขา <span class="hl">digitalWrite()</span> สั่งไฟเปิด/ปิด <span class="hl">analogRead()</span> อ่านค่าอนาล็อก</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">void setup() {
+  Serial.begin(115200);           <span class="c">// เปิดช่องคุยกับคอม</span>
+  WiFi.begin("SSID", "password"); <span class="c">// เชื่อม Wi-Fi</span>
+  pinMode(2, OUTPUT);             <span class="c">// ขา 2 = ขาออก (LED)</span>
+}
+
+void loop() {
+  digitalWrite(2, HIGH);          <span class="c">// เปิด LED</span>
+  delay(1000);                    <span class="c">// รอ 1 วิ</span>
+  digitalWrite(2, LOW);           <span class="c">// ปิด LED</span>
+  delay(1000);
+}</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>เปิด Serial Monitor ด้วย Baud Rate ไม่ตรง (ต้อง 115200) จะเห็นตัวหนังสือมั่ว</li>
+              <li>ลืมใส่ <code>delay()</code> ใน loop() → โค้ดทำงานเร็วมากจนรวน (Wi-Fi ยังไม่ทันต่อ)</li>
+              <li>ขา GPIO 34-39 อ่านได้อย่างเดียว ใช้ <code>pinMode(34, OUTPUT)</code> ไม่ได้</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 1.2 -->
+      <div class="card reveal">
+        <span class="tag">วงจร</span>
+        <h3>Digital Logic &amp; Circuits</h3>
+        <p>ขา GPIO คือช่องที่ใช้คุยกัน สัญญาณ High = ไฟเข้า (1) Low = ไม่มีไฟ (0) เหมือนไฟสัญญาณเปิด/ปิด</p>
+        <div class="learn">รู้ว่าเซนเซอร์สื่อสารกับบอร์ดอย่างไร</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">GPIO = General Purpose Input/Output</span> ขาที่ตั้งได้ว่าจะเป็น "ขาอ่าน" หรือ "ขาเขียน"</li>
+              <li><span class="hl">HIGH</span> = แรงดัน ~3.3V (แทนเลข 1) / <span class="hl">LOW</span> = 0V (แทนเลข 0)</li>
+              <li>ขาที่ตั้งเป็น <span class="hl">INPUT_PULLUP</span> จะมีตัวต้านทานดึงค่าให้เป็น HIGH เอง ป้องกัน "ขาลอย" (Floating) ที่ค่ากระพริบมั่ว</li>
+              <li>ADC (Analog-to-Digital) แปลงแรงดัน 0-3.3V เป็นตัวเลข 0-4095 (12-bit) เช่น เซนเซอร์ความชื้น</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">pinMode(23, INPUT_PULLUP);       <span class="c">// ปุ่มกด — เมื่อกดจะกลายเป็น LOW</span>
+bool press = digitalRead(23);    <span class="c">// อ่านค่า: true = ยังไม่กด</span>
+
+pinMode(34, INPUT);              <span class="c">// ขาอนาล็อก 0-3.3V</span>
+int raw = analogRead(34);        <span class="c">// ได้ค่า 0 - 4095</span>
+float volt = raw * (3.3 / 4095.0); <span class="c">// แปลงกลับเป็นโวลต์</span></pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ESP32 ใช้ไฟ <span class="hl">3.3V</span> ไม่ใช่ 5V — ต่อ 5V เข้าขาตรงๆ ไหม้บอร์ดได้</li>
+              <li>ปุ่มกดที่ไม่มี Pull-up/Pull-down อ่านค่าได้มั่วเพราะสัญญาณลอย</li>
+              <li>แบ่งแรงดัน (Voltage Divider) ให้ถูกต้องก่อนอ่านค่า ADC</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 1.3 -->
+      <div class="card reveal">
+        <span class="tag">การส่ง</span>
+        <h3>HTTP POST Requests</h3>
+        <p>การห่อข้อมูลเป็น JSON แล้วยิงออกอินเทอร์เน็ต เหมือนเขียนจดหมายในซองพร้อมที่อยู่ปลายทาง</p>
+        <div class="learn">ขั้นตอนแพ็กข้อมูล (Payload) แล้วส่งออก</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>HTTP มีคำสั่งหลัก 4 ตัว: <span class="hl">GET</span> (ขอข้อมูล), <span class="hl">POST</span> (ส่งข้อมูลใหม่), <span class="hl">PUT/PATCH</span> (แก้ข้อมูล), <span class="hl">DELETE</span> (ลบ)</li>
+              <li>POST = เอาข้อมูลใส่ใน Body ของคำขอ แล้วเปิดหัวข้อ <span class="hl">Content-Type: application/json</span></li>
+              <li>เซิร์ฟเวอร์ตอบกลับด้วย <span class="hl">HTTP Status Code</span>: <span class="hl">2xx</span> = สำเร็จ, <span class="hl">4xx</span> = ผิดฝั่งผู้ส่ง, <span class="hl">5xx</span> = เซิร์ฟเวอร์พัง</li>
+              <li><span class="hl">JSON</span> เป็นรูปแบบข้อความ <span class="hl">key: value</span> ที่ทั้งบอร์ดและเซิร์ฟเวอร์อ่านตรงกัน</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code"><span class="c">// ใช้ไลบรารี HTTPClient (ติดตั้งผ่าน Library Manager)</span>
+#include &lt;HTTPClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+HTTPClient http;
+http.begin("https://api.example.com/api/data");
+http.addHeader("Content-Type", "application/json");
+
+String payload = "{\"temp\":29.5,\"hum\":70}";
+int code = http.POST(payload);    <span class="c">// ส่ง! code 201 = บันทึกสำเร็จ</span>
+http.end();</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ลืมตรวจ <span class="hl">HTTP code</span> — ส่งไปแล้วไม่รู้ว่าสำเร็จหรือตกหล่น</li>
+              <li>URL ใช้ http:// (ไม่มี s) ถูก Wi-Fi/Library บล็อก เพราะไม่ปลอดภัย</li>
+              <li>สร้าง String payload ด้วยมือง่ายผิดพลาด — ใช้ไลบรารี ArduinoJson ช่วยสร้าง</li>
+              <li>Server ต้องการ Header อย่างอื่น (เช่น API Key) แต่ไม่ได้ส่ง</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 1.4 -->
+      <div class="card reveal">
+        <span class="tag">พลังงาน</span>
+        <h3>Deep Sleep Mode</h3>
+        <p>บอร์ดหลับพักผ่อน แล้วปลุกตัวเองตามเวลา (Timer Wakeup) เพื่อประหยัดแบตเตอรี่ เหมือนตั้งนาฬิกาปลุกแล้วงีบ</p>
+        <div class="learn">ทำไมต้องหลับ และตื่นตามเวลาอย่างไร</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>ESP32 ตอนทำงานใช้ไฟ <span class="hl">~50-150 mA</span> แต่ตอน Deep Sleep เหลือ <span class="hl">~10 µA</span> — ลดลงเป็นหมื่นเท่า ยืดแบตเตอรี่เป็นเดือน/ปี</li>
+              <li><span class="hl">esp_sleep_enable_timer_wakeup()</span> ตั้งนาฬิกาปลุกให้ตื่นเป็นรอบ (วินาที = ไมโครวินาที <code>1e6</code>)</li>
+              <li>หลับลึกจะปิด CPU และ RAM หลัก ข้อมูลที่อยากเก็บต้องฝากไว้ใน <span class="hl">RTC Memory</span> (เหมือนกระเป๋าที่ไม่ทิ้งตอนนอน)</li>
+              <li>นอกจาก Timer แล้ว ปลุกได้ด้วย GPIO (Touch) เช่น กดปุ่มเพื่อปลุก</li>
+              <li>งานใน loop() หยุดทันทีที่หลับ — ต้องออกแบบให้ทำงานเป็น "รอบ" ใน setup()</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">void setup() {
+  Serial.begin(115200);
+  <span class="c">// ----- 1. ตั้งให้ตื่นทุก 60 วินาที -----</span>
+  esp_sleep_enable_timer_wakeup(60 * 1e6);
+
+  <span class="c">// ----- 2. ทำงานที่ต้องทำ -----</span>
+  readSensor();
+  sendHTTP();
+
+  <span class="c">// ----- 3. หลับลึก -----</span>
+  esp_deep_sleep_start();
+}</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ลืมว่าหลังตื่นจะกลับไปรัน <span class="hl">setup()</span> ใหม่ ไม่ใช่ loop() ต่อ</li>
+              <li>ตัวแปรปกติหายไปตอนหลับ — ต้องใช้ <code>RTC_DATA_ATTR</code> เก็บค่าที่อยากได้ไว้ข้ามการหลับ</li>
+              <li>ยังเปิด Wi-Fi ค้างไว้ก่อนหลับ → กินไฟโดยเปล่าประโยชน์ ควร <span class="hl">WiFi.disconnect()</span> ก่อน</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <ul class="key-points reveal">
+      <li><span class="mark">1</span> จับข้อมูลจากเซนเซอร์ด้วยภาษา C/C++ (setup + loop)</li>
+      <li><span class="mark">2</span> รู้จักสัญญาณ High/Low, GPIO, Pull-up, ADC</li>
+      <li><span class="mark">3</span> ห่อเป็น JSON แล้ว POST ออกอินเทอร์เน็ต (รอ HTTP 2xx)</li>
+      <li><span class="mark">4</span> หลับลึก ~10 µA ปลุกเองเป็นรอบด้วย Timer</li>
+    </ul>
+  </section>
+
+  <!-- ============ PHASE 2 ============ -->
+  <section class="phase" id="p2">
+    <div class="phase-head reveal">
+      <span class="phase-badge">PHASE 2</span>
+      <h2 class="phase-title">ตัวกลางรับ-ส่งข้อมูล · Backend API (Node.js)</h2>
+    </div>
+    <p class="phase-sub reveal">เจ้าหน้าที่รับจดหมายกลางด่าน — รอรับข้อมูลจาก ESP32 แล้ววิ่งไปฝากไว้ในโกดัง</p>
+
+    <div class="analogy reveal">
+      <div class="label">เปรียบเทียบง่ายๆ</div>
+      <p>Node.js เป็น <strong>ไปรษณีย์กลาง</strong>: มีหน้าเคาน์เตอร์ (Express route) รับซองจดหมาย แกะซองอ่านเนื้อหา (Middleware) และไม่รอใคร — รับหลายฉบับพร้อมกันได้โดยไม่ติดขัด (Asynchronous)</p>
+    </div>
+
+    <div class="grid">
+      <!-- Card 2.1 -->
+      <div class="card reveal">
+        <span class="tag">หัวใจ</span>
+        <h3>JavaScript + Asynchronous</h3>
+        <p>ทำงานแบบไม่ต้องรอคอย — ระหว่างรอข้อมูลของจดหมายฉบับหนึ่ง ก็ไปรับฉบับอื่นต่อได้ เหมือนพนักงานเสิร์ฟที่ลุกไปเสิร์ฟโต๊ะอื่นระหว่างรอครัว</p>
+        <div class="learn">หัวใจสำคัญที่ทำให้ Node.js เร็ว</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>Node.js ใช้ <span class="hl">Event Loop</span> เธรดเดียว คอยวนรับงานเรื่อยๆ โดยไม่โดน "รอคอย" บล็อก</li>
+              <li>งานช้า (อ่านไฟล์, ส่งคำขอไปฐานข้อมูล) จะถูกส่งไปทำที่ระบบ แล้วจอง <span class="hl">Promise</span> ไว้ เมื่อเสร็จแล้ว Event Loop กลับมาทำต่อ</li>
+              <li>เขียนแบบใหม่ๆ ใช้ <span class="hl">async / await</span> อ่านง่าย เหมือนเขียนโค้ดทีละบรรทัดธรรมดา แต่ไม่บล็อก</li>
+              <li><span class="hl">Callback</span> คือฟังก์ชันที่ส่งไปให้เรียกตอนเสร็จ — ถ้าโยงเยอะเกิน กลายเป็น "Callback Hell" โค้ดพังอ่านยาก</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code"><span class="c">// async = ฟังก์ชันนี้มีงานช้า (รอ DB)</span>
+async function handleData(req, res) {
+  const row = await db.insert(payload); <span class="c">// อันนี้ "รอ" แต่ไม่บล็อกคนอื่น</span>
+  res.json({ ok: true });
+}
+
+<span class="c">// เทียบกับแบบ Callback (แบบเก่า ยืดเยื้อ)</span>
+db.insert(payload, (err, row) =&gt; {
+  if (err) return console.log(err);
+  res.json({ ok: true });
+});</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>มีโค้ดที่บล็อก (Blocking) เช่น <code>while(true)</code> หรือ <code>readFileSync</code> → Event Loop ตายทั้งระบบ</li>
+              <li>ลืม <span class="hl">await</span> → โค้ดทำงานต่อก่อนข้อมูลมา ผลลัพธ์ผิด</li>
+              <li>ไม่จัดการ error ใน async → กลายเป็น Promise rejected ที่เงียบ (Unhandled Rejection)</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 2.2 -->
+      <div class="card reveal">
+        <span class="tag">เส้นทาง</span>
+        <h3>Express.js Routing &amp; Middleware</h3>
+        <p>สร้าง API เช่น <code>/api/data</code> สำหรับรับข้อมูล และใช้ Middleware แกะกล่อง JSON เหมือนป้ายบอกเส้นทางในอาคาร + พนักงานตรวจบัตรหน้าประตู</p>
+        <div class="learn">วิธีสร้าง Endpoint และรับ JSON</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">Route</span> = เส้นทางที่ประกาศในแอป เช่น <code>POST /api/data</code> แผนที่ HTTP method + path ไปหาฟังก์ชัน</li>
+              <li><span class="hl">Middleware</span> = ฟังก์ชันที่ทำงานก่อนถึงจุดหมาย ทำงานเป็นสายพาน (chained): <code>express.json()</code> แกะ JSON ใน Body ให้เป็น object ก่อนถึง handler</li>
+              <li><span class="hl">req.body</span> เก็บข้อมูลที่ POST เข้ามา (ค่า temp/hum) และ <span class="hl">res.status().json()</span> ตอบกลับเป็น JSON พร้อมสถานะ</li>
+              <li>ลำดับของ middleware <span class="hl">สำคัญมาก</span> — ต้องประกาศ express.json() ก่อน route ถึงจะใช้ได้</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">const express = require('express');
+const app = express();
+
+app.use(express.json()); <span class="c">// middleware: แกะ JSON ทุกคำขอ</span>
+
+app.post('/api/data', (req, res) =&gt; {
+  const { temp, hum } = req.body; <span class="c">// เอาข้อมูลที่ ESP32 ส่ง</span>
+  console.log(`temp=${temp} hum=${hum}`);
+  res.status(201).json({ status: 'saved' }); <span class="c">// 201 Created</span>
+});
+
+app.listen(3000);</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ประกาศ <code>app.use(express.json())</code> หลัง route → body เป็น undefined</li>
+              <li>ต้องจัดการ <span class="hl">CORS</span> ถ้าเว็บฝั่ง Browser เรียก API ต่างโดเมน</li>
+              <li>ไม่ validate ข้อมูลก่อน (temp เป็นข้อความ?) → ข้อมูลสกปรกเข้าฐานข้อมูล</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 2.3 -->
+      <div class="card reveal">
+        <span class="tag">ความลับ</span>
+        <h3>Environment Variables (.env)</h3>
+        <p>ซ่อนรหัสผ่านและ API Key ไว้ในไฟล์ลับ ไม่โผล่บนอินเทอร์เน็ต เหมือนกุญแจห้องที่เก็บไว้กับตัว ไม่ติดไว้ที่ประตู</p>
+        <div class="learn">รักษาความปลอดภัยของโค้ด</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>ค่าเซ็นซิทีฟ (รหัสผ่าน DB, API Key, JWT Secret) ไม่ควร Hard-code ในโค้ดที่อาจหลุดขึ้น GitHub</li>
+              <li><span class="hl">.env</span> เป็นไฟล์เก็บค่าเป็น <code>KEY=VALUE</code> และถูก <span class="hl">.gitignore</span> กันไม่ให้ commit</li>
+              <li>ไลบรารี <span class="hl">dotenv</span> อ่านไฟล์ .env ตอนเริ่มแอป แล้วยัดเข้า <span class="hl">process.env</span></li>
+              <li>ฝั่ง Cloud (Render) ก็กรอกค่าเหล่านี้ใน Dashboard ได้ ไม่ต้องมีไฟล์จริงบนเครื่อง</li>
+              <li>มีไฟล์ <span class="hl">.env-template</span> บอกชื่อตัวแปรโดยไม่ใส่ค่าจริง เพื่อให้เพื่อนร่วมทีมสร้าง .env ของตัวเอง</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code"><span class="c">// ----- ไฟล์ .env (ห้าม push ขึ้น GitHub!) -----</span>
+DB_URL=postgres://user:pass@db.supabase.co:6543/postgres
+API_KEY=secret123
+PORT=3000
+
+<span class="c">// ----- โค้ด Node.js -----</span>
+require('dotenv').config();       <span class="c">// โหลด .env เข้า process.env</span>
+const url = process.env.DB_URL;   <span class="c">// ใช้ค่าแบบนี้แทน hard-code</span>
+const port = process.env.PORT || 3000;</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>Commit ไฟล์ .env ขึ้น GitHub → รหัสผ่านหลุด ต้องรีบไปแก้รหัสทันที</li>
+              <li>ลืมใส่ <code>.env</code> ใน .gitignore → หลุดทุกครั้ง</li>
+              <li>Hard-code ค่าลับในโค้ดแล้วอัปโหลด → Render สร้าง instance ใหม่ (ตั้งค่า DB_URL ใหม่) แต่โค้ดยังใช้ค่าเก่า</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 2.4 -->
+      <div class="card reveal">
+        <span class="tag">ความจำ</span>
+        <h3>Git &amp; GitHub + Cloud Hosting</h3>
+        <p>Git คือเครื่องย้อนเวลาให้โค้ด (Commit/Push) GitHub คือตู้เก็บผลงาน Cloud (Render) คือเครื่องจักรที่ไปดึงโค้ดมารันเป็นเซิร์ฟเวอร์จริง</p>
+        <div class="learn">ควบคุมเวอร์ชัน และเอาโค้ดขึ้น Cloud</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">git init</span> เริ่มควบคุมเวอร์ชันในโฟลเดอร์ → <span class="hl">git add .</span> เอาคนมาเข้างาน → <span class="hl">git commit -m "..."</span> ถ่ายรูปโค้ดเป็นจุดย้อนกลับ → <span class="hl">git push</span> อัปขึ้น GitHub</li>
+              <li>ทุก commit เก็บประวัติทั้งหมด — เหมือน <span class="hl">Save Point</span> ในเกม ย้อนกลับมาเมื่อไหร่ก็ได้</li>
+              <li><span class="hl">.gitignore</span> บอกว่าไฟล์ไหนไม่ต้องติดตาม (node_modules, .env)</li>
+              <li><span class="hl">PaaS (Render)</span>: เชื่อม GitHub Repo → กำหนด Build/Start command → มันดึงโค้ด ลง npm install แล้วรันเป็น URL สาธารณะ</li>
+              <li>Time to Live: Render อาจ "หลับ" เมื่อไม่มี traffic (Free tier) — ปกติได้ HTTP response ประมาณ <span class="hl">Sleep</span> แรกช้า แต่กลับมาทำงานเอง</li>
+            </ul>
+            <h4>ตัวอย่างคำสั่ง</h4>
+            <pre class="code">git init
+git add .
+git commit -m "สร้าง API รับข้อมูล"
+git push origin main
+
+<span class="c">// Render (Dashboard):</span>
+<span class="c">// New Web Service → Connect GitHub repo</span>
+<span class="c">// Build Command : npm install</span>
+<span class="c">// Start Command : npm start</span></pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>Commit <code>node_modules</code> ขึ้นไป → repo โต ยาก maintenance</li>
+              <li>Commit ข้อมูลลับ (ไม่มี .gitignore) → ต้องแก้ด้วย git filter + รีเซ็ตรหัส</li>
+              <li>Start Command ผิด หรือลืมเปิด Port → Render ขึ้นมาแต่ 502</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <ul class="key-points reveal">
+      <li><span class="mark">1</span> Event Loop ทำงานแบบไม่รอคอย (async/await)</li>
+      <li><span class="mark">2</span> Express สร้างเส้นทาง <code>/api/data</code> + express.json()</li>
+      <li><span class="mark">3</span> ซ่อนความลับด้วย .env + .gitignore</li>
+      <li><span class="mark">4</span> git commit → push → Render auto-deploy</li>
+    </ul>
+  </section>
+
+  <!-- ============ PHASE 3 ============ -->
+  <section class="phase" id="p3">
+    <div class="phase-head reveal">
+      <span class="phase-badge">PHASE 3</span>
+      <h2 class="phase-title">โกดังเก็บข้อมูล · Database (Supabase)</h2>
+    </div>
+    <p class="phase-sub reveal">ที่เก็บข้อมูลทุกอย่างอย่างเป็นระเบียบ — ข้อมูลทุกค่าเก็บลงชั้นวางเรียงตามเวลา ไม่หาย ไม่ปนกัน</p>
+
+    <div class="analogy reveal">
+      <div class="label">เปรียบเทียบง่ายๆ</div>
+      <p>Supabase (PostgreSQL) คือ <strong>ห้องสมุด</strong>: ข้อมูลแต่ละค่าเป็นหนังสือบนชั้น (ตาราง/Table) ทุกเล่มมีเลขเรียก (ID + เวลา) และเวลาเปิด-ปิดห้องเป็นเวลามาตรฐานโลก (UTC) ใครจะดูจากที่ไหนก็ตรงกัน</p>
+    </div>
+
+    <div class="grid">
+      <!-- Card 3.1 -->
+      <div class="card reveal">
+        <span class="tag">โครงสร้าง</span>
+        <h3>Relational Database (PostgreSQL)</h3>
+        <p>เก็บข้อมูลเป็นตาราง: คอลัมน์ = ประเภทของข้อมูล (Float, Timestamp) แถว = ข้อมูล 1 ชุด เหมือนตารางบันทึกในสมุดเล่มใหญ่</p>
+        <div class="learn">ออกแบบตาราง Row / Column / Data Types</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">Table</span> = ตาราง, <span class="hl">Column</span> = ชนิดข้อมูลแต่ละช่อง (เช่น temp), <span class="hl">Row</span> = ข้อมูล 1 ชุดจากเซนเซอร์ 1 ครั้ง</li>
+              <li><span class="hl">Primary Key</span> = ตัวเลขประจำตัวที่ไม่ซ้ำใคร (SERIAL/BIGSERIAL) ใช้ค้นหาและอ้างอิง</li>
+              <li><span class="hl">Foreign Key</span> = ชี้ไปหาแถวในอีกตาราง เชื่อมความสัมพันธ์ (เช่น device → sensor_data)</li>
+              <li>Data Types ที่เจอบ่อย: <span class="hl">FLOAT/REAL</span> (เลขทศนิยม), <span class="hl">INTEGER</span>, <span class="hl">TEXT/VARCHAR</span>, <span class="hl">TIMESTAMPTZ</span> (เวลา), <span class="hl">BOOLEAN</span></li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">CREATE TABLE sensor_data (
+  id         BIGSERIAL PRIMARY KEY,  <span class="c">-- เลขอัตโนมัติ ไม่ซ้ำ</span>
+  device_id  TEXT NOT NULL,
+  temp       FLOAT NOT NULL,         <span class="c">-- ชนิด: ตัวเลขทศนิยม</span>
+  hum        FLOAT,
+  created_at TIMESTAMPTZ DEFAULT NOW() <span class="c">-- เวลาอัตโนมัติ</span>
+);</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>เลือก Data Type ผิด (ใช้ TEXT เก็บอุณหภูมิ) → query หาค่ามาก/น้อยไม่ได้</li>
+              <li>ไม่ตั้ง Primary Key → ข้อมูลซ้ำคุมไม่ได้</li>
+              <li>ลืม index บนคอลัมน์ที่ใช้ WHERE บ่อย → query ช้าเมื่อข้อมูลเยอะ</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 3.2 -->
+      <div class="card reveal">
+        <span class="tag">ภาษา</span>
+        <h3>SQL Commands</h3>
+        <p><code>INSERT</code> = เพิ่มข้อมูลใหม่ <code>SELECT</code> = ดึงข้อมูลออกมา ใช้คู่กับภาษาไทยจริงๆ ก็คือ "จดลงสมุด" กับ "เปิดหน้าอ่าน"</p>
+        <div class="learn">ทบทวนคำสั่งพื้นฐาน INSERT / SELECT</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">INSERT INTO</span> = เพิ่มแถวใหม่ ต้องระบุคอลัมน์กับค่า</li>
+              <li><span class="hl">SELECT</span> = ดึงข้อมูล + <span class="hl">WHERE</span> กรอง + <span class="hl">ORDER BY</span> เรียง + <span class="hl">LIMIT</span> จำกัดจำนวน</li>
+              <li><span class="hl">WHERE</span> คล้ายตัวกรองใน Excel — ค่าไหนตรงเงื่อนไขถึงถูกเลือก</li>
+              <li>ใน Node.js ใช้ <span class="hl">Parameterized Query</span> ($1) แทนการต่อ string กัน SQL Injection</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code"><span class="c">-- เพิ่มข้อมูล (INSERT)</span>
+INSERT INTO sensor_data (device_id, temp, hum)
+VALUES ('esp32-01', 29.5, 70);
+
+<span class="c">-- ดึงข้อมูล (SELECT) 10 แถวล่าสุด</span>
+SELECT temp, hum, created_at
+FROM sensor_data
+ORDER BY created_at DESC
+LIMIT 10;
+
+<span class="c">-- กรองเฉพาะอุณหภูมิเกิน 30</span>
+SELECT * FROM sensor_data WHERE temp &gt; 30;</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ต่อค่าลง query ตรงๆ (<span class="hl">SQL Injection</span>) — ต้องใช้พารามิเตอร์ $1, $2 เสมอ</li>
+              <li>ลืม <code>WHERE</code> ตอน DELETE/UPDATE → ลบ/แก้ทั้งตาราง!</li>
+              <li>ใช้ <code>SELECT *</code> ไม่จำกัด → ดึงข้อมูลเยอะเกินเปลือง</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 3.3 -->
+      <div class="card reveal">
+        <span class="tag">เวลา</span>
+        <h3>Timezones &amp; UTC</h3>
+        <p>ทุกคนบน Cloud ใช้เวลามาตรฐานโลก (UTC) เดียวกัน แปลงเป็น TIMESTAMPTZ เพื่อไม่ให้สับสน เหมือนทุกประเทศคุยกันด้วยเวลากรีนิช</p>
+        <div class="learn">ทำไมต้องเก็บเวลาแบบ UTC เสมอ</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">UTC</span> = เวลามาตรฐานโลก ไม่มีเวลาไทย-เวลาอเมริกาให้สับสน (ไม่มี Daylight Saving)</li>
+              <li><span class="hl">TIMESTAMP</span> ธรรมดา = เก็บตัวเลขเปล่าๆ ไม่รู้ว่าอยู่โซนไหน → ตีความผิดพลาด</li>
+              <li><span class="hl">TIMESTAMPTZ</span> = เก็บช่วงเวลาที่แม่นยำ (เป็น UTC ข้างใน) แล้วตอนอ่านค่อย <span class="hl">AT TIME ZONE</span> แปลงเป็นโซนที่ต้องการ</li>
+              <li>หลักการ: <span class="hl">เก็บเป็น UTC ตอนเขียน → แปลงตอนอ่าน</span> เพื่อให้คนดูจากที่ไหนเข้าใจตรงกัน</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code"><span class="c">-- ดูเวลาปัจจุบัน (ผลเป็น UTC เสมอ)</span>
+SELECT NOW();
+
+<span class="c">-- แปลงเป็นเวลาไทย (UTC+7) ตอนอ่าน</span>
+SELECT created_at AT TIME ZONE 'Asia/Bangkok'
+FROM sensor_data;
+
+<span class="c">-- CAST: เปลี่ยนจาก text เป็น timestamptz</span>
+SELECT '2026-08-15 08:00:00+07'
+       ::timestamptz;</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>เก็บ <code>TIMESTAMP</code> แบบไม่มี timezone → ค่าเลื่อนเวลา 7 ชม. ทุกครั้ง</li>
+              <li>อยากได้เวลาไทยแต่ลืม <code>AT TIME ZONE</code> → ดูผิดชั่วโมง</li>
+              <li>ตั้งค่า <code>timezone</code> ของเซิร์ฟเวอร์ตามใจ → แสดงผลเพี้ยนข้ามโซน</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 3.4 -->
+      <div class="card reveal">
+        <span class="tag">ท่อส่ง</span>
+        <h3>Connection Pooling (Port 6543)</h3>
+        <p>จัดการท่อเชื่อมต่อฐานข้อมูล ใช้ท่อที่มีอยู่แชร์กันหลายคน แทนที่จะเปิดท่อใหม่ทุกครั้ง เหมือนรถเมล์ที่ไปถึงปลายทางในเที่ยวเดียวพาคนหลายคน</p>
+        <div class="learn">รองรับการเชื่อมต่อจำนวนมากไม่ล่ม</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>ทุกครั้งที่ query = เปิด TCP connection ใหม่ (ช้า + เปลือง resource ฝั่ง DB)</li>
+              <li><span class="hl">Pool</span> = เตรียมท่อเชื่อมต่อสำเร็จไว้ล่วงหน้าแล้ว <span class="hl">แชร์ใช้ร่วมกัน</span> กับทุก request</li>
+              <li>Supabase ให้ <span class="hl">Port 6543</span> เป็น <span class="hl">PgBouncer Pooler</span> — ทำหน้าที่รับเชื่อมต่อจำนวนมหาศาล แล้วแชร์ท่อน้อยๆ ไปหา DB จริง</li>
+              <li>ปรับ <span class="hl">max</span> = จำนวนท่อสูงสุดที่ pool มี เช่น 10 และ idleTimeoutMillis = ปลดท่อว่างทิ้ง</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DB_URL, <span class="c">// port 6543</span>
+  max: 10,                <span class="c">// ท่อสูงสุด 10 ท่อ</span>
+  idleTimeoutMillis: 30000
+});
+
+app.post('/api/data', async (req, res) =&gt; {
+  await pool.query(
+    'INSERT INTO sensor_data (temp) VALUES ($1)',
+    [req.body.temp]
+  );
+  res.status(201).json({ ok: true });
+});</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>เปิด client ใหม่ทุก request แล้วไม่ปิด → <span class="hl">FATAL: too many connections</span></li>
+              <li>ลืมปล่อย client กลับ pool (release) → ท่อหมด</li>
+              <li>ต่อ port 5432 ตรงๆ (ไม่ผ่าน pooler) เมื่อมีคนเยอะ → เกิน limit ของ Supabase</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <ul class="key-points reveal">
+      <li><span class="mark">1</span> ข้อมูลเรียงเป็นตาราง (Table/Row/Column + Data Types)</li>
+      <li><span class="mark">2</span> INSERT เพิ่ม / SELECT ดึงข้อมูล + WHERE</li>
+      <li><span class="mark">3</span> เก็บเวลาเป็น TIMESTAMPTZ (UTC) ตอนอ่านค่อยแปลง</li>
+      <li><span class="mark">4</span> ใช้ Pool + PgBouncer (port 6543) รองรับคนจำนวนมาก</li>
+    </ul>
+  </section>
+
+  <!-- ============ PHASE 4 ============ -->
+  <section class="phase" id="p4">
+    <div class="phase-head reveal">
+      <span class="phase-badge">PHASE 4</span>
+      <h2 class="phase-title">ปลายทาง · Data Visualization (Grafana)</h2>
+    </div>
+    <p class="phase-sub reveal">แปลงตัวเลขดิบๆ ให้เป็นกราฟสีสวย ที่มนุษย์อย่างเราเข้าใจได้ในพริบตา</p>
+
+    <div class="analogy reveal">
+      <div class="label">เปรียบเทียบง่ายๆ</div>
+      <p>Grafana คือ <strong>คนวาดกราฟ</strong>: ไปเปิดสมุดในห้องสมุด (เชื่อมต่อ Supabase) อ่านค่าอุณหภูมิแต่ละช่วงเวลา แล้วขีดเป็นเส้นกราฟ ใส่สีเขียว/เหลือง/แดงบอกว่าโอเคหรืออันตราย</p>
+    </div>
+
+    <div class="grid">
+      <!-- Card 4.1 -->
+      <div class="card reveal">
+        <span class="tag">การต่อ</span>
+        <h3>Data Sources</h3>
+        <p>เชื่อมต่อกับฐานข้อมูลภายนอกอย่างปลอดภัยด้วย SSL/TLS แบบ require เหมือนสวมกุญแจมือ+เซ็นเซ็นก่อนเข้าห้องเก็บของ</p>
+        <div class="learn">ต่อข้อมูลอย่างปลอดภัย</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">Data Source</span> = คำนิยามว่า Grafana จะไปเอาข้อมูลจากไหน (PostgreSQL, InfluxDB, Prometheus...)</li>
+              <li>ขั้นตอน: Administration → Data Sources → Add → PostgreSQL → กรอก Host/DB/User/Password</li>
+              <li><span class="hl">SSL Mode: require</span> = บังคับให้เชื่อมต่อแบบเข้ารหัส (TLS) — ข้อมูลระหว่าง Grafana ↔ Supabase ไม่ถูกดักอ่านกลางทาง</li>
+              <li>บางครั้งต้อง <span class="hl">Allow IP</span> ของ Grafana ใน Supabase เพื่อปลดล็อกการเข้าถึง</li>
+            </ul>
+            <h4>ขั้นตอน</h4>
+            <pre class="code">Grafana &gt; Administration &gt; Data sources
+  &gt; Add data source &gt; PostgreSQL
+
+Host      : db.xxx.supabase.co
+Database  : postgres
+User      : postgres
+Password  : ********
+SSL Mode  : require    &lt;-- ต้องใส่!</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>SSL Mode เป็น <code>disable</code> → Supabase ตัดการเชื่อมต่อ (หรือข้อมูลไม่เข้ารหัส)</li>
+              <li>ใส่ Port ผิด (ควร 5432 หรือ 6543 ตามแบบ) → connect timeout</li>
+              <li>ลืม Allow IP ของ Grafana Cloud → Denied</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 4.2 -->
+      <div class="card reveal">
+        <span class="tag">เวลา</span>
+        <h3>Time-series Data</h3>
+        <p>ข้อมูลที่ผูกติดกับเวลา — บันทึกค่าทุกช่วงเวลาต่อเนื่อง เหมือนบันทึกน้ำหนักทุกเช้า แล้วดึงดูแนวโน้มได้</p>
+        <div class="learn">ข้อมูลเกิดตามเวลาที่ผ่านไป</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li>Time-series = คู่ของ <span class="hl">(เวลา, ค่า)</span> ที่เกิดต่อเนื่อง เช่น (09:00, 29.5), (09:01, 29.7)...</li>
+              <li>Grafana ส่งช่วงเวลาที่ผู้ใช้เลือก (time range) ผ่าน <span class="hl">Macro</span>: <code>$__timeFilter(col)</code> เติม WHERE ให้อัตโนมัติ</li>
+              <li>ข้อมูลจำนวนมหาศาลต้อง <span class="hl">Downsample</span> (หั่นเป็นช่วงเวลา) ด้วย <code>$__timeGroup(col, '1h')</code> เพื่อให้กราฟลื่น</li>
+              <li>คอลัมน์เวลาต้องเป็น <span class="hl">TIMESTAMPTZ</span> และตั้งชื่อ alias ว่า <span class="hl">time</span> ให้ Grafana รู้จัก</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">SELECT
+  created_at AS time,          <span class="c">-- Grafana ต้องเจอคอลัมน์ "time"</span>
+  temp AS value
+FROM sensor_data
+WHERE $__timeFilter(created_at)  <span class="c">-- ช่วงเวลาที่เลือกใน Dashboard</span>
+ORDER BY time;</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ตั้งชื่อคอลัมน์เวลาไม่ใช่ <code>time</code> → Grafana ไม่รู้จะวาดแกนไหน</li>
+              <li>ใช้ TIMESTAMP (ไม่มี tz) → เวลาเลื่อนตามโซน Grafana</li>
+              <li>ไม่ downsample → ข้อมูลหมื่นจุด ดึงมาแล้วกราฟช้าหรือ crash</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 4.3 -->
+      <div class="card reveal">
+        <span class="tag">คำสั่ง</span>
+        <h3>Advanced SQL in Grafana</h3>
+        <p>เขียน Query ดึงเวลาคู่กับอุณหภูมิ คำนวณ AVG (ค่าเฉลี่ย) MAX MIN เพื่อวาดกราฟ เหมือนสั่ง "เอาอุณหภูมิตอนเที่ยงทุกวันมา"</p>
+        <div class="learn">ใช้ SQL ทำกราฟ + หาค่าทางสถิติ</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">AVG()</span> ค่าเฉลี่ย, <span class="hl">MAX()</span> ค่าสูงสุด, <span class="hl">MIN()</span> ค่าต่ำสุด — Aggregate Functions ที่รวมหลายแถวเป็นค่าเดียว</li>
+              <li>จับคู่กับ <span class="hl">GROUP BY</span> เพื่อรวมตามช่วงเวลา (1 ชม. = 1 จุดกราฟ)</li>
+              <li><span class="hl">$__timeGroup(created_at, '1h')</span> = แบ่งข้อมูลเป็นกล่องเวลา 1 ชม. แล้วคำนวณสถิติในแต่ละกล่อง</li>
+              <li>ดูรูปแบบ: สูงสุดช่วงไหน? กลางคืนเย็นแค่ไหน? → เอาไปตัดสินใจจริง</li>
+            </ul>
+            <h4>ตัวอย่างโค้ด</h4>
+            <pre class="code">SELECT
+  $__timeGroup(created_at, '1h') AS time,
+  AVG(temp) AS avg_temp,
+  MAX(temp) AS max_temp,
+  MIN(temp) AS min_temp
+FROM sensor_data
+WHERE $__timeFilter(created_at)
+GROUP BY 1          <span class="c">-- จัดกลุ่มตามช่วงเวลา 1 ชม.</span>
+ORDER BY 1;</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ใช้ aggregate โดยไม่มี GROUP BY + ไม่ครอบทุกคอลัมน์ → error</li>
+              <li>GROUP BY ชื่อคอลัมน์เดิมแทน <code>GROUP BY 1</code> (เลขตามลำดับ) อาจเจอ warning</li>
+              <li>ช่วงเวลาเล็กเกินไป vs ข้อมูลน้อย → กราฟเต็มไปด้วยช่องว่าง</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Card 4.4 -->
+      <div class="card reveal">
+        <span class="tag">สีบอกสถานะ</span>
+        <h3>Data Mapping &amp; Thresholds</h3>
+        <p>ตั้งเกณฑ์ให้ตัวเลขเปลี่ยนเป็นสี: เขียว = ปกติ เหลือง = ควรระวัง แดง = อันตราย อ่านง่ายในแวบเดียว</p>
+        <div class="learn">ทำ UX ที่ดีด้วยสีบอกสถานะ</div>
+        <details class="deep">
+          <summary>เจาะลึกทางเทคนิค</summary>
+          <div class="deep-body">
+            <h4>ทำงานอย่างไร</h4>
+            <ul>
+              <li><span class="hl">Thresholds</span> = จุดเปลี่ยนสีตามค่า เช่น 30°C = เขียว, 35°C = เหลือง, 40°C = แดง</li>
+              <li>ตั้งได้ 2 แบบ: <span class="hl">Base</span> (ค่าจาก 0 ขึ้นไป) หรือ <span class="hl">Absolute</span> (จุดจริง)</li>
+              <li>นอกจากสี ยัง <span class="hl">Value Mapping</span> แปลงตัวเลขเป็นข้อความ (0 → "ปิด", 1 → "เปิด")</li>
+              <li>ใช้กับ <span class="hl">Stat Panel</span> (การ์ดตัวเลข) หรือ <span class="hl">Threshold ตกแต่งกราฟ</span> (วาดเส้น/พื้นหลังสี)</li>
+              <li>หลัก UX: <span class="hl">สแกนพริบตาเดียว</span> ก็รู้ว่าระบบปกติดีหรือมีปัญหา</li>
+            </ul>
+            <h4>การตั้งค่า</h4>
+            <pre class="code">Grafana Panel &gt; Edit &gt; Thresholds (หรือ Field/Standard options)
+
+     0 °C - 30 °C  → สีเขียว   (ปกติ)
+    31 °C - 35 °C  → สีเหลือง  (ควรระวัง)
+    36 °C ขึ้นไป    → สีแดง    (อันตราย!)
+
+Value mappings: 0 → "ปิด" , 1 → "เปิด"</pre>
+            <h4>จุดที่พลาดบ่อย</h4>
+            <ul>
+              <li>ตั้ง Threshold แบบ Absolute แต่คิดแบบ Base → สีผิดจุด</li>
+              <li>ลืมตั้ง <span class="hl">Unit</span> (เช่น °C) → ตัวเลขแสดงแบบมั่ว</li>
+              <li>threshold ไม่ตรงเกณฑ์ของโรงงาน/สเปคจริง → หลอกผู้ใช้ให้ตกใจหรือเมินเฉย</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <ul class="key-points reveal">
+      <li><span class="mark">1</span> เชื่อมต่อ Data Source ด้วย SSL Mode: require</li>
+      <li><span class="mark">2</span> ข้อมูล Time-series = (เวลา, ค่า) + Macro $__timeFilter</li>
+      <li><span class="mark">3</span> Query สถิติด้วย AVG / MAX / MIN + $__timeGroup</li>
+      <li><span class="mark">4</span> Thresholds แปลงค่าเป็นสีเขียว/เหลือง/แดง</li>
+    </ul>
+  </section>
+
+  <!-- ============ THE STORY ============ -->
+  <section class="journey" id="story">
+    <h2 class="reveal">เส้นทางของข้อมูล 1 ตัว 📮</h2>
+    <p class="sub reveal">เล่าเป็นเรื่องสั้น — ตั้งแต่ "วัดค่า" จนถึง "เห็นกราฟ"</p>
+
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <div class="who">1 · ESP32</div>
+        <h3>"อุณหภูมิคือ 29.5 องศา!"</h3>
+        <p>เซนเซอร์อ่านค่าได้ แล้วบอร์ดห่อเป็น JSON เปิด Wi-Fi ยิง HTTP POST ไปหาเซิร์ฟเวอร์ (รอ HTTP 201) จากนั้นเข้านอน (Deep Sleep) รอรอบหน้า</p>
+      </div>
+      <div class="tl-item reveal">
+        <div class="who">2 · Node.js</div>
+        <h3>"มีจดหมายเข้า!"</h3>
+        <p>Express รับที่เส้นทาง <code>/api/data</code> middleware <code>express.json()</code> แกะ JSON ออกมา แล้วใช้ pool ของ PgBouncer ส่งเข้า DB แบบ async ไม่รอใคร</p>
+      </div>
+      <div class="tl-item reveal">
+        <div class="who">3 · Supabase</div>
+        <h3>"เก็บเข้าชั้นหนังสือ"</h3>
+        <p>เซิร์ฟเวอร์ใช้ SQL <code>INSERT</code> เขียนค่า + เวลา (TIMESTAMPTZ / UTC) ลงตาราง ข้อมูลเรียงต่อกันไปเรื่อยๆ ตามเวลาจริง</p>
+      </div>
+      <div class="tl-item reveal">
+        <div class="who">4 · Grafana</div>
+        <h3>"วาดเป็นเส้นกราฟให้ดู"</h3>
+        <p>Grafana เชื่อมฐานข้อมูลด้วย SSL (require) ใช้ <code>$__timeFilter</code> + <code>AVG/MAX/MIN</code> ดึงเวลาคู่กับอุณหภูมิ วาดกราฟเส้น ใส่ Threshold สีเขียว/เหลือง/แดง — เสร็จ! เราดูแล้วเข้าใจทันที</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="b">ผลลัพธ์: เซนเซอร์ → เซิร์ฟเวอร์ → ฐานข้อมูล → Dashboard</div>
+  Project ESP32 · IOT Pipeline ELI5 + Deep Dive · Black &amp; White Theme
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+</script>
+
+</body>
+</html>

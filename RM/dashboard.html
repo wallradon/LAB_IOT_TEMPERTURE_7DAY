@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temperature Dashboard - Simple Words</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #141414;
+    --card-2: #1a1a1a;
+    --line: #2c2c2c;
+    --line-strong: #3d3d3d;
+    --ink: #f5f5f5;
+    --ink-soft: #a8a8a8;
+    --ink-faint: #666666;
+    --white-block: #f5f5f5;
+    --white-block-ink: #0a0a0a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 60px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar .title { font-size: 15px; font-weight: 800; letter-spacing: 0.2px; }
+  .topbar .title span { color: var(--ink-faint); font-weight: 600; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 5px 14px; border-radius: 999px;
+    border: 1px solid var(--line-strong); color: var(--ink-soft);
+    background: var(--card);
+  }
+  .status-pill .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  .status-pill.live { color: var(--ink); border-color: var(--ink); }
+  .status-pill.live .dot { background: var(--ink); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 48px 20px 36px; text-align: center; border-bottom: 1px solid var(--line); }
+  .hero .kicker {
+    font-size: 11px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .hero h1 { font-size: clamp(30px, 6vw, 48px); font-weight: 800; letter-spacing: -1px; margin: 12px 0 10px; }
+  .hero p { color: var(--ink-soft); font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+  /* ---------- Big temperature card ---------- */
+  .temp-card {
+    margin-top: 40px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 40px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .temp-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--ink); opacity: 0.15;
+  }
+  .temp-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-faint); }
+  .temp-big {
+    font-size: clamp(72px, 16vw, 140px);
+    font-weight: 800; letter-spacing: -3px; line-height: 1.05;
+  }
+  .temp-big .unit { font-size: 0.35em; font-weight: 600; color: var(--ink-soft); vertical-align: super; letter-spacing: 0; }
+  .temp-status {
+    display: inline-block;
+    margin-top: 18px; padding: 8px 22px;
+    font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-soft);
+  }
+  .temp-status.hot, .temp-status.cold { background: var(--white-block); color: var(--white-block-ink); border-color: var(--white-block); }
+  .temp-msg { margin-top: 14px; color: var(--ink-soft); font-size: 15px; min-height: 24px; }
+  .temp-updated { margin-top: 6px; font-size: 12px; color: var(--ink-faint); }
+
+  /* ---------- Simple scale ---------- */
+  .scale-wrap { margin-top: 32px; }
+  .scale-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--ink-faint); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .scale {
+    position: relative; height: 10px; border-radius: 999px;
+    background: repeating-linear-gradient(90deg, var(--line-strong) 0 1px, transparent 1px 25%);
+    border: 1px solid var(--line);
+  }
+  .scale-zone { position: absolute; top: -1px; bottom: -1px; }
+  .scale-zone.cold { left: 0; width: 30%; border-left: 1px solid var(--line-strong); }
+  .scale-zone.comfy { left: 30%; width: 40%; }
+  .scale-zone.hot { right: 0; width: 30%; border-right: 1px solid var(--line-strong); }
+  .scale-marker {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--white-block); border: 4px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .scale-ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-faint); margin-top: 8px; }
+
+  /* ---------- Grid ---------- */
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 28px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px;
+    text-align: center;
+  }
+  .stat .lbl { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-faint); }
+  .stat .val { font-size: 30px; font-weight: 800; margin-top: 6px; }
+  .stat .sub { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+
+  /* ---------- Chart ---------- */
+  .chart-card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 28px; margin-top: 28px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .chart-head h2 { font-size: 16px; font-weight: 800; }
+  .chart-head .hint { font-size: 12px; color: var(--ink-faint); }
+  svg.chart { width: 100%; height: 220px; display: block; background: var(--card-2); border: 1px solid var(--line); border-radius: 14px; }
+  .chart-tags { display: flex; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--ink-faint); flex-wrap: wrap; }
+  .chart-tags b { color: var(--ink); }
+
+  /* ---------- Explainers ---------- */
+  .section-title { margin: 44px 0 16px; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+  .sect-sub { color: var(--ink-soft); font-size: 14px; margin-top: 4px; max-width: 640px; }
+  .eli5 {
+    background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 26px;
+    margin-top: 18px;
+  }
+  .eli5 .badge {
+    display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    background: var(--white-block); color: var(--white-block-ink); padding: 4px 12px; border-radius: 999px; margin-bottom: 14px;
+  }
+  .eli5 p { color: var(--ink-soft); font-size: 15px; }
+  .eli5 b { color: var(--ink); }
+
+  /* ---------- Flow pipeline ---------- */
+  .flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-top: 18px; }
+  .flow-box {
+    background: var(--card); border: 1px solid var(--line-strong); border-radius: 16px;
+    padding: 16px 18px; text-align: center; min-width: 130px; flex: 1;
+  }
+  .flow-box .n { width: 26px; height: 26px; line-height: 26px; border-radius: 50%; background: var(--white-block); color: var(--white-block-ink); font-size: 13px; font-weight: 800; margin: 0 auto 8px; }
+  .flow-box .name { font-weight: 800; font-size: 14px; }
+  .flow-box .sub { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+  .flow-arrow { font-size: 22px; color: var(--ink-faint); font-weight: 300; }
+
+  /* ---------- Status bar rows ---------- */
+  .rows { margin-top: 18px; }
+  .row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; margin-bottom: 10px;
+    background: var(--card);
+  }
+  .row .icon { width: 42px; height: 42px; flex-shrink: 0; border: 1px solid var(--line-strong); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .row .icon svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 1.8; }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .txt .t { font-weight: 800; font-size: 14.5px; }
+  .row .txt .d { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .row .status {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-soft); flex-shrink: 0;
+  }
+  .row .status.on { background: var(--white-block); color: var(--white-block-ink); border-color: var(--white-block); }
+
+  /* ---------- Buttons ---------- */
+  .btn-row { display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .btn {
+    background: var(--white-block); color: var(--white-block-ink);
+    border: 1px solid var(--white-block); padding: 12px 28px; border-radius: 999px;
+    font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: scale(0.97); }
+
+  footer { text-align: center; color: var(--ink-faint); font-size: 12px; margin-top: 48px; padding: 0 20px; }
+
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Top bar ============ -->
+<div class="topbar">
+  <div class="title">TEMP WATCH <span>&middot; in simple words</span></div>
+  <div class="status-pill" id="connPill">
+    <span class="dot"></span><span id="connText">CONNECTING&hellip;</span>
+  </div>
+</div>
+
+<!-- ============ Hero ============ -->
+<header class="hero">
+  <div class="kicker">ELI5 &middot; Explain Like I'm 5</div>
+  <h1>How hot is it in the room?</h1>
+  <p>One big number, plain words, no jargon. It tells you how the room feels — the way a grown-up would explain it to a kid.</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ Big temperature ============ -->
+  <div class="temp-card">
+    <div class="temp-label">Current temperature</div>
+    <div class="temp-big"><span id="tempBig">--</span><span class="unit">&deg;C</span></div>
+    <div><span class="temp-status" id="tempStatus">NO DATA</span></div>
+    <div class="temp-msg" id="tempMsg">Waiting for the sensor to send a reading&hellip;</div>
+    <div class="temp-updated" id="tempUpdated"></div>
+  </div>
+
+  <!-- ============ Simple scale ============ -->
+  <div class="scale-wrap">
+    <div class="scale-labels">
+      <span>Too cold</span><span>Just right</span><span>Too hot</span>
+    </div>
+    <div class="scale">
+      <div class="scale-zone cold"></div>
+      <div class="scale-zone comfy"></div>
+      <div class="scale-zone hot"></div>
+      <div class="scale-marker" id="scaleMarker" style="left: 50%;"></div>
+    </div>
+    <div class="scale-ticks">
+      <span>0&deg;</span><span>15&deg;</span><span>20&deg;</span><span>25&deg;</span><span>30&deg;</span><span>45&deg;</span>
+    </div>
+  </div>
+
+  <!-- ============ Quick stats ============ -->
+  <div class="grid">
+    <div class="stat"><div class="lbl">Lowest</div><div class="val" id="statMin">--</div><div class="sub">coldest moment</div></div>
+    <div class="stat"><div class="lbl">Average</div><div class="val" id="statAvg">--</div><div class="sub">usual temperature</div></div>
+    <div class="stat"><div class="lbl">Highest</div><div class="val" id="statMax">--</div><div class="sub">hottest moment</div></div>
+  </div>
+
+  <!-- ============ Chart ============ -->
+  <div class="chart-card">
+    <div class="chart-head">
+      <h2>The story of the temperature</h2>
+      <div class="hint">one dot = one reading</div>
+    </div>
+    <svg class="chart" id="chart" viewBox="0 0 800 220" preserveAspectRatio="none"></svg>
+    <div class="chart-tags">
+      <span><b id="tagNow">--</b> newest</span>
+      <span><b id="tagHigh">--</b> highest</span>
+      <span><b id="tagLow">--</b> lowest</span>
+      <span><b id="tagCount">0</b> readings shown</span>
+    </div>
+  </div>
+
+  <!-- ============ ELI5: what does the number mean ============ -->
+  <h2 class="section-title">What does the number mean?</h2>
+  <p class="sect-sub">No charts jargon. Just answers like a parent would give.</p>
+  <div class="eli5">
+    <span class="badge">In simple words</span>
+    <p id="eli5Text">If the number is low, the room is cold — grab a blanket. If it is high, the room is hot — open a window. If it is in the middle, it feels just right.</p>
+  </div>
+
+  <!-- ============ ELI5: how does it work ============ -->
+  <h2 class="section-title">How does this work?</h2>
+  <p class="sect-sub">Data goes on a little journey. It is like mailing a postcard across the internet.</p>
+  <div class="flow">
+    <div class="flow-box"><div class="n">1</div><div class="name">ESP32 chip</div><div class="sub">feels the heat</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="n">2</div><div class="name">Express API</div><div class="sub">passes the message</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="n">3</div><div class="name">Supabase</div><div class="sub">the memory box</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="n">4</div><div class="name">This page</div><div class="sub">shows you the number</div></div>
+  </div>
+
+  <!-- ============ Status rows ============ -->
+  <h2 class="section-title">Is everything working?</h2>
+  <p class="sect-sub">A traffic-light style check, but only black and white.</p>
+  <div class="rows">
+    <div class="row">
+      <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div>
+      <div class="txt"><div class="t">Sensor (ESP32)</div><div class="d">Is the chip sending temperature readings?</div></div>
+      <div class="status" id="checkSensor">WAITING</div>
+    </div>
+    <div class="row">
+      <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg></div>
+      <div class="txt"><div class="t">Server (API)</div><div class="d">Is this page able to talk to the server?</div></div>
+      <div class="status" id="checkServer">WAITING</div>
+    </div>
+    <div class="row">
+      <div class="icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+      <div class="txt"><div class="t">Memory (Supabase)</div><div class="d">Is the data being stored correctly?</div></div>
+      <div class="status" id="checkDb">WAITING</div>
+    </div>
+  </div>
+
+  <!-- ============ Buttons ============ -->
+  <div class="btn-row">
+    <button class="btn" id="refreshBtn">Refresh now</button>
+    <button class="btn ghost" id="demoBtn">Show sample data</button>
+  </div>
+
+  <footer>
+    TEMP WATCH &middot; ESP32 &rarr; Express &rarr; Supabase &middot; black &amp; white ELI5 dashboard
+  </footer>
+</main>
+
+<script>
+(function () {
+  const API = '/api/temp';
+  const COLD_MAX = 18;    // below this = too cold
+  const HOT_MIN = 28;     // above this = too hot
+  const DEMO = [
+    21.4,22.1,21.8,22.6,23.0,22.4,23.8,24.1,24.6,25.0,
+    24.7,25.3,26.0,25.6,26.4,27.0,26.8,27.5,28.1,28.4,
+    27.9,27.2,26.6,26.1,25.5,25.0,24.4,23.9,23.2,22.7
+  ];
+  let data = [];
+  let demoMode = false;
+
+  const $ = function (id) { return document.getElementById(id); };
+  const setStatus = function (el, text, on) {
+    el.textContent = text;
+    el.classList.toggle('on', !!on);
+  };
+
+  function describe(temp) {
+    if (temp < COLD_MAX) {
+      return { status: 'TOO COLD', mood: 'hot',
+        msg: 'Brr! The room is cold. Grab a blanket or turn the heater on.',
+        eli5: 'If the number is low, the room is cold — grab a blanket. Wear something warm!'
+      };
+    }
+    if (temp > HOT_MIN) {
+      return { status: 'TOO HOT', mood: 'hot',
+        msg: 'Phew! The room is hot. Open a window or turn on a fan.',
+        eli5: 'If the number is high, the room is hot — open a window. Maybe get a cold drink!'
+      };
+    }
+    return { status: 'JUST RIGHT', mood: 'ok',
+      msg: 'Nice! The temperature feels comfortable right now.',
+      eli5: 'If the number is in the middle, the room feels just right. You can relax!'
+    };
+  }
+
+  function lerpMin(a, b, t) { return a + (b - a) * t; }
+
+  function updateTempDisplay() {
+    if (!data.length) return;
+    const latest = data[data.length - 1];
+    const temp = latest.temperature;
+    const d = describe(temp);
+
+    $('tempBig').textContent = Number(temp).toFixed(1);
+    $('tempStatus').textContent = d.status;
+    $('tempStatus').className = 'temp-status ' + d.mood;
+    $('tempMsg').textContent = d.msg;
+    $('eli5Text').textContent = d.eli5;
+
+    // move marker: 0..45 deg mapped to 0..100%
+    const pct = Math.min(100, Math.max(0, ((temp - 0) / (45 - 0)) * 100));
+    $('scaleMarker').style.left = pct + '%';
+
+    $('tempUpdated').textContent = latest.created_at
+      ? 'Updated ' + new Date(latest.created_at).toLocaleString()
+      : '';
+  }
+
+  function computeStats() {
+    if (!data.length) return;
+    const temps = data.map(function (d) { return Number(d.temperature); });
+    const min = Math.min.apply(null, temps);
+    const max = Math.max.apply(null, temps);
+    const avg = temps.reduce(function (a, b) { return a + b; }, 0) / temps.length;
+    $('statMin').textContent = min.toFixed(1) + '\u00b0';
+    $('statMax').textContent = max.toFixed(1) + '\u00b0';
+    $('statAvg').textContent = avg.toFixed(1) + '\u00b0';
+
+    const last = temps[temps.length - 1];
+    $('tagNow').textContent = Number(last).toFixed(1) + '\u00b0';
+    $('tagHigh').textContent = max.toFixed(1) + '\u00b0';
+    $('tagLow').textContent = min.toFixed(1) + '\u00b0';
+    $('tagCount').textContent = temps.length;
+  }
+
+  function drawChart() {
+    const svg = $('chart');
+    const W = 800, H = 220, PAD = 16;
+    svg.innerHTML = '';
+    if (data.length < 2) return;
+
+    const temps = data.map(function (d) { return Number(d.temperature); });
+    const min = Math.min.apply(null, temps);
+    const max = Math.max.apply(null, temps);
+    const span = Math.max(1, max - min);
+    const lo = min - span * 0.25;
+    const hi = max + span * 0.25;
+
+    function x(i) { return PAD + (i / (temps.length - 1)) * (W - PAD * 2); }
+    function y(v) { return H - PAD - ((v - lo) / (hi - lo)) * (H - PAD * 2); }
+
+    const NS = 'http://www.w3.org/2000/svg';
+
+    // grid lines
+    for (let g = 0; g <= 4; g++) {
+      const yy = PAD + (g / 4) * (H - PAD * 2);
+      const line = document.createElementNS(NS, 'line');
+      line.setAttribute('x1', PAD); line.setAttribute('x2', W - PAD);
+      line.setAttribute('y1', yy); line.setAttribute('y2', yy);
+      line.setAttribute('stroke', '#262626'); line.setAttribute('stroke-width', '1');
+      svg.appendChild(line);
+    }
+
+    // fill area
+    const areaPts = [PAD + ',' + (H - PAD)];
+    temps.forEach(function (t, i) { areaPts.push(x(i).toFixed(1) + ',' + y(t).toFixed(1)); });
+    areaPts.push(x(temps.length - 1).toFixed(1) + ',' + (H - PAD));
+    const area = document.createElementNS(NS, 'polygon');
+    area.setAttribute('points', areaPts.join(' '));
+    area.setAttribute('fill', '#ffffff'); area.setAttribute('fill-opacity', '0.12');
+    svg.appendChild(area);
+
+    // line
+    const linePts = temps.map(function (t, i) { return x(i).toFixed(1) + ',' + y(t).toFixed(1); });
+    const poly = document.createElementNS(NS, 'polyline');
+    poly.setAttribute('points', linePts.join(' '));
+    poly.setAttribute('fill', 'none'); poly.setAttribute('stroke', '#ffffff');
+    poly.setAttribute('stroke-width', '2.5'); poly.setAttribute('stroke-linejoin', 'round');
+    poly.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(poly);
+
+    // dots + highlight highest/lowest
+    let hiI = 0, loI = 0;
+    temps.forEach(function (t, i) { if (t > temps[hiI]) hiI = i; if (t < temps[loI]) loI = i; });
+    temps.forEach(function (t, i) {
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(t));
+      dot.setAttribute('r', (i === hiI || i === loI) ? 5 : 2.5);
+      dot.setAttribute('fill', (i === hiI || i === loI) ? '#ffffff' : '#0a0a0a');
+      dot.setAttribute('stroke', '#ffffff'); dot.setAttribute('stroke-width', '1');
+      svg.appendChild(dot);
+    });
+  }
+
+  function setChecks() {
+    const last = data.length ? Number(data[data.length - 1].temperature) : null;
+    setStatus($('checkSensor'), data.length ? 'WORKING' : 'NO DATA', data.length > 0);
+    setStatus($('checkServer'), 'WORKING', true);
+    setStatus($('checkDb'), data.length ? 'WORKING' : 'NO DATA', data.length > 0);
+    void last;
+  }
+
+  function setConn(text, live) {
+    $('connText').textContent = text;
+    $('connPill').classList.toggle('live', live);
+  }
+
+  function render() {
+    updateTempDisplay();
+    computeStats();
+    drawChart();
+    setChecks();
+  }
+
+  function loadDemo() {
+    demoMode = true;
+    const now = Date.now();
+    data = DEMO.map(function (t, i) {
+      return { temperature: t, created_at: new Date(now - (DEMO.length - i) * 600000).toISOString() };
+    });
+    setConn('SAMPLE DATA', false);
+    setStatus($('checkSensor'), 'SAMPLE', true);
+    setStatus($('checkDb'), 'SAMPLE', true);
+    render();
+  }
+
+  function load() {
+    fetch(API + '?limit=60')
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        data = (json && json.data) ? json.data : [];
+        demoMode = false;
+        setConn(data.length ? 'LIVE' : 'LIVE \u00b7 EMPTY', data.length > 0);
+        if (!data.length) {
+          $('tempBig').textContent = '--';
+          setStatus($('checkSensor'), 'WAITING', false);
+          setStatus($('checkDb'), 'WAITING', false);
+        }
+        render();
+      })
+      .catch(function () {
+        if (!data.length) {
+          $('tempBig').textContent = '--';
+          $('tempMsg').textContent = 'Cannot reach the server. Click "Show sample data" to preview.';
+          setConn('OFFLINE', false);
+          setStatus($('checkServer'), 'OFFLINE', false);
+        }
+      });
+  }
+
+  $('refreshBtn').addEventListener('click', load);
+  $('demoBtn').addEventListener('click', loadDemo);
+
+  load();
+  setInterval(function () { if (!demoMode) load(); }, 10000);
+})();
+</script>
+</body>
+</html>

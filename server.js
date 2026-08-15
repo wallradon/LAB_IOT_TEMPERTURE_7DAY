@@ -49,6 +49,24 @@ app.post('/api/temp', async (req, res) => {
   });
 });
 
+// Endpoint for reading temperature history from Supabase
+app.get('/api/temp', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+
+  const { data, error } = await supabase
+    .from('sensor_logs')
+    .select('temperature, created_at')
+    .order('created_at', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error('❌ Failed to read data from Supabase:', error.message);
+    return res.status(500).json({ error: 'Database server error' });
+  }
+
+  res.status(200).json({ data: data });
+});
+
 app.listen(port, () => {
   console.log(`🚀 Server API (Supabase version) running at http://localhost:${port}`);
 });
